@@ -23,6 +23,7 @@ class Nutricionista(models.Model):
     especialidades = models.ManyToManyField(Especialidade)
     preco_consulta = models.DecimalField(max_digits=8, decimal_places=2, help_text="Preço por consulta")
     duracao_consulta = models.IntegerField(help_text="Duração da consulta em minutos")
+    horarios_disponiveis = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.usuario.get_full_name() or self.usuario.username
