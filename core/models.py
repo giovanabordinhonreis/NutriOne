@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+# Defina um caminho para salvar as fotos de perfil
+def user_directory_path(instance, filename):
+    # O arquivo será salvo em MEDIA_ROOT/user_<id>/<filename>
+    return f'user_{instance.usuario.id}/profile_pics/{filename}'
+
 class User(AbstractUser):
     class UserType(models.TextChoices):
         CLIENTE = 'CLIENTE', 'Cliente'
@@ -33,11 +38,15 @@ class Cliente(models.Model):
     peso = models.FloatField(null=True, blank=True)
     altura = models.FloatField(null=True, blank=True, help_text="Altura em metros")
     idade = models.IntegerField(null=True, blank=True)
-    objetivos = models.TextField(blank=True, null=True)
+    objetivos = models.TextField(blank=True, null=True) # Mantido como TextField aqui
+    
+    # NOVO CAMPO ADICIONADO
+    foto_perfil = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
 
     def __str__(self):
         return self.usuario.get_full_name() or self.usuario.username
 
+# ... (restante dos modelos: Consulta, PlanoAlimentar, Refeicao) ...
 class Consulta(models.Model):
     class ModalidadeChoices(models.TextChoices):
         PRESENCIAL = 'PRESENCIAL', 'Presencial'

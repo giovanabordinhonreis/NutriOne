@@ -1,13 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login, logout 
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse 
+from django.views.decorators.http import require_POST 
+from django.utils import timezone 
+
 from .forms import (
     CustomAuthenticationForm, 
     CustomUserCreationForm, 
     NutricionistaProfileForm,
-    ClienteProfileForm
+    ClienteProfileForm,
+    ClienteProfileUpdateForm 
 )
-from .models import Nutricionista, Cliente, User
+from .models import Nutricionista, Cliente, User, Consulta, PlanoAlimentar, Refeicao 
+
 
 def login_usuario(request):
     if request.method == 'POST':
@@ -15,23 +21,17 @@ def login_usuario(request):
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            
             if user.user_type == User.UserType.NUTRICIONISTA and hasattr(user, 'perfil_nutricionista'):
                 return redirect('dashboard_nutri')
             elif user.user_type == User.UserType.CLIENTE and hasattr(user, 'perfil_cliente'):
                 return redirect('dashboard_cliente')
-            else:
-                return redirect('selecionar_conta')
-    else:
-        form = CustomAuthenticationForm()
+            else: return redirect('selecionar_conta')
+    else: form = CustomAuthenticationForm()
     return render(request, 'core/login.html', {'form': form})
 
-
 def logout_usuario(request):
-
     logout(request)
     return redirect('login')
-
 
 def cadastro_cliente(request):
     if request.method == 'POST':
@@ -40,8 +40,7 @@ def cadastro_cliente(request):
             user = form.save()
             auth_login(request, user)
             return redirect('selecionar_conta') 
-    else:
-        form = CustomUserCreationForm()
+    else: form = CustomUserCreationForm()
     return render(request, 'core/cadastro.html', {'form': form})
 
 @login_required 
@@ -51,68 +50,41 @@ def selecionar_conta(request):
         return redirect('dashboard_nutri')
     elif user.user_type == User.UserType.CLIENTE and hasattr(user, 'perfil_cliente'):
         return redirect('dashboard_cliente')
-        
     return render(request, 'core/selecionar_conta.html')
+
 
 @login_required
 def cadastro_nutricionista(request):
     if request.method == 'POST':
         form = NutricionistaProfileForm(request.POST)
         if form.is_valid():
-            cd = form.cleaned_data
-            
-            horarios = {}
-            dias_semana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']
-            for dia in dias_semana:
+            cd = form.cleaned_data; horarios = {}
+            dias = ['segunda','terca','quarta','quinta','sexta','sabado']
+            for dia in dias:
                 if cd[f'{dia}_ativo']:
-                    horarios[dia] = {
-                        'inicio': cd[f'{dia}_inicio'].strftime('%H:%M') if cd[f'{dia}_inicio'] else None,
-                        'fim': cd[f'{dia}_fim'].strftime('%H:%M') if cd[f'{dia}_fim'] else None,
-                    }
-            
-            nutri_profile, created = Nutricionista.objects.update_or_create(
-                usuario=request.user,
-                defaults={
-                    'preco_consulta': cd['preco_consulta'],
-                    'duracao_consulta': cd['duracao_consulta'],
-                    'horarios_disponiveis': horarios
-                }
-            )
-            
-            nutri_profile.especialidades.set(cd['especialidades'])
-            
-            user = request.user
-            user.user_type = User.UserType.NUTRICIONISTA
-            user.save()
-
+                    horarios[dia] = { 'inicio': cd[f'{dia}_inicio'].strftime('%H:%M') if cd[f'{dia}_inicio'] else None, 'fim': cd[f'{dia}_fim'].strftime('%H:%M') if cd[f'{dia}_fim'] else None }
+            nutri, created = Nutricionista.objects.update_or_create( usuario=request.user, defaults={ 'preco_consulta': cd['preco_consulta'], 'duracao_consulta': cd['duracao_consulta'], 'horarios_disponiveis': horarios })
+            nutri.especialidades.set(cd['especialidades']); user = request.user
+            user.user_type = User.UserType.NUTRICIONISTA; user.save()
             return redirect('dashboard_nutri')
-    else:
-        form = NutricionistaProfileForm()
-        
+    else: form = NutricionistaProfileForm()
     return render(request, 'core/cadastro_nutricionista.html', {'form': form})
 
 @login_required
 def dashboard_nutricionista(request):
-    return render(request, 'core/dashboard_nutricionista.html')
+    context = {} 
+    return render(request, 'core/dashboard_nutricionista.html', context)
+
 
 @login_required
 def cadastro_cliente_perfil(request):
     if request.method == 'POST':
-        form = ClienteProfileForm(request.POST)
+        form = ClienteProfileForm(request.POST) 
         if form.is_valid():
-            cliente_profile, created = Cliente.objects.update_or_create(
-                usuario=request.user,
-                defaults=form.cleaned_data
-            )
-            
-            user = request.user
-            user.user_type = User.UserType.CLIENTE
-            user.save()
-            
+            cliente, created = Cliente.objects.update_or_create( usuario=request.user, defaults=form.cleaned_data )
+            user = request.user; user.user_type = User.UserType.CLIENTE; user.save()
             return redirect('dashboard_cliente')
-    else:
-        form = ClienteProfileForm()
-        
+    else: form = ClienteProfileForm()
     return render(request, 'core/cadastro_cliente_perfil.html', {'form': form})
 
 @login_required
@@ -122,49 +94,79 @@ def dashboard_cliente(request):
     except Cliente.DoesNotExist:
         return redirect('cadastro_cliente_perfil')
 
-    proxima_consulta = {
-        'nutricionista': 'Ana Martins',
-        'data_horario': 'Amanhã, 03 de Outubro de 2025 - 10:00',
-        'modalidade': 'Online'
-    }
-    evolucao = {
-        'peso_atual': '72.5',
-        'imc': '22.5'
-    }
-    plano_hoje = {
-        'cafe': {'nome': 'Café da Manhã', 'descricao': 'Aveia com frutas', 'calorias': 320},
-        'almoco': {'nome': 'Almoço', 'descricao': 'Frango grelhado com arroz', 'calorias': 450},
-        'lanche': {'nome': 'Lanche da Tarde', 'descricao': 'Iogurte com granola', 'calorias': 180},
-        'jantar': {'nome': 'Jantar', 'descricao': 'Salmão com legumes', 'calorias': 380},
-        'total_calorias': 1330,
-        'meta_calorias': 1500,
-    }
+    proxima_consulta = Consulta.objects.filter(
+        cliente=cliente, 
+        data_horario__gte=timezone.now(),
+        status=Consulta.StatusChoices.CONFIRMADO
+    ).order_by('data_horario').first()
+
+    plano_atual = PlanoAlimentar.objects.filter(
+        cliente=cliente
+    ).order_by('-data_criacao').first()
+
+    refeicoes_dict = {}
+    if plano_atual:
+        refeicoes = plano_atual.refeicoes.all()
+        for refeicao in refeicoes:
+            chave = refeicao.nome.lower().replace(" ", "_").replace("ç", "c").replace("ã", "a")
+            refeicoes_dict[chave] = refeicao
     
-    progresso_percentual = 0
-    if plano_hoje['meta_calorias'] > 0:
-        progresso_percentual = (plano_hoje['total_calorias'] / plano_hoje['meta_calorias']) * 100
+    
+    form_update = ClienteProfileUpdateForm(instance=cliente)
 
     context = {
         'cliente': cliente,
-        'proxima_consulta': proxima_consulta,
-        'evolucao': evolucao,
-        'plano_hoje': plano_hoje,
-        'progresso_percentual': progresso_percentual
+        'proxima_consulta': proxima_consulta, 
+        'plano_atual': plano_atual,         
+        'refeicoes': refeicoes_dict,        
+        'form_update': form_update 
     }
     return render(request, 'core/dashboard_cliente.html', context)
 
-@login_required
-def consultas_cliente(request):
-    return redirect('dashboard_cliente')
-
-@login_required
-def planos_alimentares_cliente(request):
-    return redirect('dashboard_cliente')
-
-@login_required
-def encontrar_nutricionista(request):
-    return redirect('dashboard_cliente')
 
 @login_required
 def perfil_cliente(request):
-    return redirect('dashboard_cliente')
+
+    try:
+        cliente_profile = request.user.perfil_cliente
+    except Cliente.DoesNotExist:
+        return JsonResponse({'error': 'Perfil não encontrado.'}, status=404)
+
+    if request.method == 'POST':
+        form = ClienteProfileUpdateForm(request.POST, request.FILES, instance=cliente_profile)
+        if form.is_valid():
+            form.save() 
+            foto_url = cliente_profile.foto_perfil.url if cliente_profile.foto_perfil else None
+            return JsonResponse({'success': True, 'foto_url': foto_url})
+        else:
+            # Retorna erros de validação
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            
+    elif request.method == 'GET':
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+
+            data = {
+                'peso': cliente_profile.peso,
+                'altura': cliente_profile.altura,
+                'idade': cliente_profile.idade,
+                'objetivos': cliente_profile.objetivos, 
+                'foto_url': cliente_profile.foto_perfil.url if cliente_profile.foto_perfil else None 
+            }
+            
+            return JsonResponse(data)
+        else:
+            
+            return redirect('dashboard_cliente')
+
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+
+
+@login_required
+def consultas_cliente(request): return redirect('dashboard_cliente')
+@login_required
+def planos_alimentares_cliente(request): return redirect('dashboard_cliente')
+@login_required
+def encontrar_nutricionista(request): return redirect('dashboard_cliente')

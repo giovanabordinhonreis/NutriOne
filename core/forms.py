@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, Nutricionista, Especialidade, Cliente
 
+
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
@@ -80,7 +81,6 @@ class NutricionistaProfileForm(forms.ModelForm):
                 widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm', 'value': '18:00'})
             )
 
-
 class ClienteProfileForm(forms.ModelForm):
     OBJETIVO_CHOICES = [
         ('', 'Selecione seu principal objetivo'),
@@ -112,5 +112,29 @@ class ClienteProfileForm(forms.ModelForm):
             'idade': forms.NumberInput(attrs={'placeholder': '30', 'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class ClienteProfileUpdateForm(forms.ModelForm):
+    
+    OBJETIVO_CHOICES = ClienteProfileForm.OBJETIVO_CHOICES 
+    
+    objetivos = forms.ChoiceField(
+        choices=OBJETIVO_CHOICES,
+        label="Objetivos",
+        widget=forms.Select(attrs={'class': 'form-select'}) 
+    )
+    
+    foto_perfil = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = Cliente
+        fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos'] 
+        labels = {
+            'foto_perfil': 'Foto de Perfil',
+            'peso': 'Peso (kg)',
+            'altura': 'Altura (m)',
+            'idade': 'Idade',
+        }
+        widgets = {
+            'peso': forms.NumberInput(attrs={'class': 'form-control'}),
+            'altura': forms.NumberInput(attrs={'class': 'form-control'}),
+            'idade': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
