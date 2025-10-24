@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User
-from .models import User, Nutricionista, Especialidade
+from .models import User, Nutricionista, Especialidade, Cliente
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -80,3 +79,38 @@ class NutricionistaProfileForm(forms.ModelForm):
                 required=False,
                 widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm', 'value': '18:00'})
             )
+
+
+class ClienteProfileForm(forms.ModelForm):
+    OBJETIVO_CHOICES = [
+        ('', 'Selecione seu principal objetivo'),
+        ('EMAGRECIMENTO', 'Emagrecimento'),
+        ('GANHO_MASSA', 'Ganho de Massa Muscular'),
+        ('REEDUCACAO_ALIMENTAR', 'Reeducação Alimentar'),
+        ('NUTRICAO_ESPORTIVA', 'Nutrição Esportiva'),
+        ('MELHORAR_SAUDE', 'Melhorar a Saúde/Disposição'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    objetivos = forms.ChoiceField(
+        choices=OBJETIVO_CHOICES,
+        label="Objetivos",
+        widget=forms.Select(attrs={'class': 'form-select'}) 
+    )
+
+    class Meta:
+        model = Cliente
+        fields = ['peso', 'altura', 'idade', 'objetivos']
+        labels = {
+            'peso': 'Peso (kg)',
+            'altura': 'Altura (m)',
+            'idade': 'Idade',
+        }
+        widgets = {
+            'peso': forms.NumberInput(attrs={'placeholder': '75,5', 'class': 'form-control'}),
+            'altura': forms.NumberInput(attrs={'placeholder': '1.78', 'class': 'form-control'}),
+            'idade': forms.NumberInput(attrs={'placeholder': '30', 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

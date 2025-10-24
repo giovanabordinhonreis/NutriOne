@@ -1,0 +1,264 @@
+{% extends 'core/base_cliente.html' %}
+{% load static %}
+
+{% block title %}Dashboard - {{ block.super }}{% endblock %}
+
+{% block extrastyles %}
+<style>
+    .btn-primary-custom {
+        background-color: #8A9A5B;
+        border-color: #8A9A5B;
+        border-radius: 24px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    .btn-primary-custom:hover {
+        background-color: #7A8A4C;
+        border-color: #7A8A4C;
+    }
+    .btn-secondary-custom {
+        background-color: #F5DEB3; 
+        border-color: #F5DEB3;
+        color: #7A8A4C;
+        border-radius: 24px;
+        padding: 10px 20px;
+        font-weight: 600;
+        width: 100%;
+    }
+    .btn-secondary-custom:hover {
+        background-color: #e2cba2;
+        border-color: #e2cba2;
+        color: #7A8A4C;
+    }
+
+    .card-custom {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background-color: white;
+    }
+
+    .consulta-card {
+        background-color: #f7f9f2; 
+        border: 1px solid #e8ede0;
+        border-radius: 24px;
+        padding: 1.25rem;
+    }
+    .badge-online {
+        background-color: #8A9A5B;
+        color: white;
+        border-radius: 12px;
+        padding: 0.3em 0.6em;
+        font-size: 0.8rem;
+    }
+    .details-link {
+        color: #7A8A4C;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .details-link:hover {
+        text-decoration: underline;
+    }
+
+    .evolucao-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .evolucao-item span:first-child {
+        color: #6c757d; 
+    }
+    .evolucao-item span:last-child {
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: #333;
+    }
+
+    .plano-header {
+        color: #333;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+    .refeicao-card {
+        border-radius: 24px;
+        padding: 15px;
+        height: 100%;
+    }
+    .refeicao-card h6 {
+        font-weight: 600;
+        color: #333;
+    }
+    .refeicao-card i { margin-right: 8px; }
+    .refeicao-card p {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 0.25rem;
+    }
+    .refeicao-card .calorias {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .cafe { background-color: #FFF4E6; border: 1px solid #FFE8CC; }
+    .cafe .calorias { color: #FB8C00; }
+    
+    .almoco { background-color: #E6F7EA; border: 1px solid #CCEBD4; }
+    .almoco .calorias { color: #2E7D32; }
+
+    .lanche { background-color: #FFF9E6; border: 1px solid #FFECB3; }
+    .lanche .calorias { color: #F9A825; }
+
+    .jantar { background-color: #F3E5F5; border: 1px solid #E1BEE7; }
+    .jantar .calorias { color: #6A1B9A; }
+
+    .progress-bar {
+        background-color: #8A9A5B;
+   
+        width: var(--progresso-width, 0%); 
+    }
+    
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold mb-0">Olá, {{ request.user.first_name }}!</h2>
+        <p class="text-muted mb-0">Bem-vindo de volta ao seu painel pessoal</p>
+    </div>
+    <a href="#" class="btn btn-primary-custom">
+        <i class="bi bi-plus-lg"></i> Agendar nova consulta
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card card-custom mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title fw-bold">Sua Próxima Consulta</h5>
+                    {% if proxima_consulta.modalidade == 'Online' %}
+                        <span class="badge-online">Online</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted">com Dra. {{ proxima_consulta.nutricionista }}</p>
+                
+                <div class="consulta-card d-flex align-items-center">
+                    <i class="bi bi-calendar-week-fill text-muted fs-4 me-3"></i>
+                    <div>
+                        <span class="fw-bold d-block">{{ proxima_consulta.data_horario }}</span>
+                    </div>
+                </div>
+                <a href="#" class="details-link mt-3 d-inline-block">Ver detalhes da consulta</a>
+            </div>
+        </div>
+
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">Resumo do seu plano para hoje</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="refeicao-card cafe">
+                            <h6><i class="bi bi-brightness-high-fill" style="color: #FB8C00;"></i> {{ plano_hoje.cafe.nome }}</h6>
+                            <p>{{ plano_hoje.cafe.descricao }}</p>
+                            <span class="calorias">{{ plano_hoje.cafe.calorias }} kcal</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="refeicao-card almoco">
+                            <h6><i class="bi bi-sun-fill" style="color: #2E7D32;"></i> {{ plano_hoje.almoco.nome }}</h6>
+                            <p>{{ plano_hoje.almoco.descricao }}</p>
+                            <span class="calorias">{{ plano_hoje.almoco.calorias }} kcal</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="refeicao-card lanche">
+                            <h6><i class="bi bi-clock-fill" style="color: #F9A825;"></i> {{ plano_hoje.lanche.nome }}</h6>
+                            <p>{{ plano_hoje.lanche.descricao }}</p>
+                            <span class="calorias">{{ plano_hoje.lanche.calorias }} kcal</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="refeicao-card jantar">
+                            <h6><i class="bi bi-moon-fill" style="color: #6A1B9A;"></i> {{ plano_hoje.jantar.nome }}</h6>
+                            <p>{{ plano_hoje.jantar.descricao }}</p>
+                            <span class="calorias">{{ plano_hoje.jantar.calorias }} kcal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                    <span>Progresso do dia</span>
+                    <span class="fw-bold">{{ plano_hoje.total_calorias }} / {{ plano_hoje.meta_calorias }} kcal</span>
+                </div>
+
+                <div class="progress" style="height: 10px; border-radius: 24px;">
+                    <div class="progress-bar" role="progressbar" style="--progresso-width: {{ progresso_percentual }}%;" aria-valuenow="{{ progresso_percentual|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                
+                <a href="#" class="btn btn-primary-custom w-100 mt-4">Ver Plano Alimentar Completo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">Acompanhe sua Evolução</h5>
+                
+                <div class="evolucao-item">
+                    <span>Peso Atual</span>
+                    <span>{{ evolucao.peso_atual }} kg</span>
+                </div>
+                <div class="evolucao-item">
+                    <span>IMC</span>
+                    <span>{{ evolucao.imc }}</span>
+                </div>
+
+                <div class="mt-4">
+                    <canvas id="evolucaoGrafico" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extrascripts %}
+<script>
+    const ctx = document.getElementById('evolucaoGrafico').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+            datasets: [{
+                label: 'IMC',
+                data: [23.5, 23, 22.8, 22.5], 
+                backgroundColor: 'rgba(138, 154, 91, 0.1)',
+                borderColor: '#8A9A5B',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3 // Deixa a linha suave
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Esconde a legenda 'IMC'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
