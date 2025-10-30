@@ -5,7 +5,6 @@
 
 {% block extrastyles %}
 <style>
-    /* Estilos existentes (sem alterações) */
     .btn-primary-custom { background-color: #8A9A5B; border-color: #8A9A5B; border-radius: 24px; padding: 10px 20px; font-weight: 500; }
     .btn-primary-custom:hover { background-color: #7A8A4C; border-color: #7A8A4C; }
     .card-custom { border-radius: 24px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); background-color: white; }
@@ -13,11 +12,9 @@
     .badge-online { background-color: #8A9A5B; color: white; border-radius: 12px; padding: 0.3em 0.6em; font-size: 0.8rem; }
     .details-link { color: #7A8A4C; font-weight: 500; text-decoration: none; }
     .details-link:hover { text-decoration: underline; }
-    /* Removido estilo .evolucao-item */
     .refeicao-card { border-radius: 24px; padding: 15px; height: 100%; display: flex; flex-direction: column; }
     .refeicao-card h6 { font-weight: 600; color: #333; margin-bottom: auto; }
     .refeicao-card i { margin-right: 8px; }
-    /* Cores das refeições */
     .cafe { background-color: #FFF4E6; border: 1px solid #FFE8CC; } .cafe i { color: #FB8C00; }
     .almoco { background-color: #E6F7EA; border: 1px solid #CCEBD4; } .almoco i { color: #2E7D32; }
     .lanche { background-color: #FFF9E6; border: 1px solid #FFECB3; } .lanche i { color: #F9A825; }
@@ -33,13 +30,13 @@
         <h2 class="h4 fw-bold mb-0">Olá, {{ request.user.first_name }}!</h2>
         <p class="text-muted mb-0">Bem-vindo de volta ao seu painel pessoal</p>
     </div>
-    <a href="#" class="btn btn-primary-custom">
+    
+    <a href="{% url 'encontrar_nutricionista' %}" class="btn btn-primary-custom">
         <i class="bi bi-plus-lg"></i> Agendar nova consulta
     </a>
 </div>
 
 <div class="row g-4">
-    {# Coluna única ocupando toda a largura #}
     <div class="col-lg-12"> 
         <div class="card card-custom mb-4">
             <div class="card-body p-4">
@@ -70,7 +67,7 @@
             <div class="card-body p-4">
                 <h5 class="card-title fw-bold mb-4">Resumo do seu plano alimentar</h5>
                 <div class="row g-3">
-                    {# --- MUDANÇA AQUI: Voltando para col-md-6 --- #}
+                    {# Layout 2x2 (col-md-6) mantido #}
                     {% with refeicao=refeicoes.cafe_da_manha %} 
                     <div class="col-md-6"> 
                         <div class="refeicao-card cafe">
@@ -119,7 +116,6 @@
                         </div>
                     </div>
                     {% endwith %}
-                    {# --- FIM DA MUDANÇA --- #}
                 </div>
             </div>
         </div>
