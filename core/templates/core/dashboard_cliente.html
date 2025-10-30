@@ -10,7 +10,7 @@
     .card-custom { border-radius: 24px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); background-color: white; }
     .consulta-card { background-color: #f7f9f2; border: 1px solid #e8ede0; border-radius: 24px; padding: 1.25rem; }
     .badge-online { background-color: #8A9A5B; color: white; border-radius: 12px; padding: 0.3em 0.6em; font-size: 0.8rem; }
-    .details-link { color: #7A8A4C; font-weight: 500; text-decoration: none; }
+    .details-link { color: #7A8A4C; font-weight: 500; text-decoration: none; cursor: pointer; }
     .details-link:hover { text-decoration: underline; }
     .refeicao-card { border-radius: 24px; padding: 15px; height: 100%; display: flex; flex-direction: column; }
     .refeicao-card h6 { font-weight: 600; color: #333; margin-bottom: auto; }
@@ -20,6 +20,12 @@
     .lanche { background-color: #FFF9E6; border: 1px solid #FFECB3; } .lanche i { color: #F9A825; }
     .jantar { background-color: #F3E5F5; border: 1px solid #E1BEE7; } .jantar i { color: #6A1B9A; }
     .no-data-message { color: #6c757d; text-align: center; padding: 1rem 0; font-size: 0.9rem; }
+    #consultaDetalhesModal .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
+    #consultaDetalhesModal .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+    #consultaDetalhesModal .modal-body p { margin-bottom: 0.5rem; }
+    #consultaDetalhesModal .modal-body strong { color: #333; }
+    #consultaDetalhesModal .modal-footer { border-top: none; }
+    #consultaDetalhesModal .btn-fechar-detalhes { border-radius: 24px; padding: 10px 20px; }
 </style>
 {% endblock %}
 
@@ -30,7 +36,6 @@
         <h2 class="h4 fw-bold mb-0">Olá, {{ request.user.first_name }}!</h2>
         <p class="text-muted mb-0">Bem-vindo de volta ao seu painel pessoal</p>
     </div>
-    
     <a href="{% url 'encontrar_nutricionista' %}" class="btn btn-primary-custom">
         <i class="bi bi-plus-lg"></i> Agendar nova consulta
     </a>
@@ -44,85 +49,76 @@
                 {% if proxima_consulta %}
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <p class="text-muted mb-0">com Dr(a). {{ proxima_consulta.nutricionista.usuario.get_full_name }}</p> 
-                        {% if proxima_consulta.modalidade == 'ONLINE' %}
-                            <span class="badge-online">Online</span>
-                        {% else %}
-                            <span class="badge bg-secondary rounded-pill">Presencial</span> 
-                        {% endif %}
+                        {% if proxima_consulta.modalidade == 'ONLINE' %} <span class="badge-online">Online</span>
+                        {% else %} <span class="badge bg-secondary rounded-pill">Presencial</span> {% endif %}
                     </div>
                     <div class="consulta-card d-flex align-items-center">
                         <i class="bi bi-calendar-week-fill text-muted fs-4 me-3"></i>
-                        <div>
-                            <span class="fw-bold d-block">{{ proxima_consulta.data_horario|date:"d/m/Y - H:i" }}</span> 
-                        </div>
+                        <div> <span class="fw-bold d-block">{{ proxima_consulta.data_horario|date:"d/m/Y - H:i" }}</span> </div>
                     </div>
-                    <a href="#" class="details-link mt-3 d-inline-block">Ver detalhes da consulta</a>
+                    <a id="verDetalhesConsultaLink" class="details-link mt-3 d-inline-block">Ver detalhes da consulta</a>
                 {% else %}
                     <p class="no-data-message">Sem consultas agendadas.</p>
                 {% endif %}
             </div>
         </div>
-
         <div class="card card-custom">
             <div class="card-body p-4">
                 <h5 class="card-title fw-bold mb-4">Resumo do seu plano alimentar</h5>
                 <div class="row g-3">
-                    {# Layout 2x2 (col-md-6) mantido #}
-                    {% with refeicao=refeicoes.cafe_da_manha %} 
-                    <div class="col-md-6"> 
-                        <div class="refeicao-card cafe">
-                            <h6><i class="bi bi-brightness-high-fill"></i> {{ refeicao.nome|default:"Café da Manhã" }}</h6>
-                            {% if refeicao %}
-                                <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> 
-                            {% else %}
-                                 <p class="no-data-message small my-2">Não definido</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endwith %}
-                    {% with refeicao=refeicoes.almoco %}
-                    <div class="col-md-6"> 
-                         <div class="refeicao-card almoco">
-                            <h6><i class="bi bi-sun-fill"></i> {{ refeicao.nome|default:"Almoço" }}</h6>
-                            {% if refeicao %}
-                                <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> 
-                            {% else %}
-                                 <p class="no-data-message small my-2">Não definido</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endwith %}
-                    {% with refeicao=refeicoes.lanche_da_tarde %} 
-                    <div class="col-md-6"> 
-                         <div class="refeicao-card lanche">
-                            <h6><i class="bi bi-clock-fill"></i> {{ refeicao.nome|default:"Lanche da Tarde" }}</h6>
-                            {% if refeicao %}
-                                <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> 
-                            {% else %}
-                                 <p class="no-data-message small my-2">Não definido</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                     {% endwith %}
-                     {% with refeicao=refeicoes.jantar %}
-                    <div class="col-md-6"> 
-                        <div class="refeicao-card jantar">
-                            <h6><i class="bi bi-moon-fill"></i> {{ refeicao.nome|default:"Jantar" }}</h6>
-                            {% if refeicao %}
-                                <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> 
-                            {% else %}
-                                 <p class="no-data-message small my-2">Não definido</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endwith %}
+                    {% with refeicao=refeicoes.cafe_da_manha %} <div class="col-md-6"> <div class="refeicao-card cafe"> <h6><i class="bi bi-brightness-high-fill"></i> {{ refeicao.nome|default:"Café da Manhã" }}</h6> {% if refeicao %} <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> {% else %} <p class="no-data-message small my-2">Não definido</p> {% endif %} </div> </div> {% endwith %}
+                    {% with refeicao=refeicoes.almoco %} <div class="col-md-6"> <div class="refeicao-card almoco"> <h6><i class="bi bi-sun-fill"></i> {{ refeicao.nome|default:"Almoço" }}</h6> {% if refeicao %} <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> {% else %} <p class="no-data-message small my-2">Não definido</p> {% endif %} </div> </div> {% endwith %}
+                    {% with refeicao=refeicoes.lanche_da_tarde %} <div class="col-md-6"> <div class="refeicao-card lanche"> <h6><i class="bi bi-clock-fill"></i> {{ refeicao.nome|default:"Lanche da Tarde" }}</h6> {% if refeicao %} <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> {% else %} <p class="no-data-message small my-2">Não definido</p> {% endif %} </div> </div> {% endwith %}
+                    {% with refeicao=refeicoes.jantar %} <div class="col-md-6"> <div class="refeicao-card jantar"> <h6><i class="bi bi-moon-fill"></i> {{ refeicao.nome|default:"Jantar" }}</h6> {% if refeicao %} <p class="text-muted small">{{ refeicao.alimentos|truncatewords:5|default:"-" }}</p> {% else %} <p class="no-data-message small my-2">Não definido</p> {% endif %} </div> </div> {% endwith %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+
+<div class="modal fade" id="consultaDetalhesModal" tabindex="-1" aria-labelledby="consultaDetalhesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 24px;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="consultaDetalhesModalLabel">Detalhes da Consulta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {# O conteúdo do modal só é renderizado se houver uma próxima consulta #}
+        {% if proxima_consulta %} 
+            <p><strong class="text-muted">Nutricionista:</strong><br> {{ proxima_consulta.nutricionista.usuario.get_full_name }}</p>
+            <p><strong class="text-muted">Data e Hora:</strong><br> {{ proxima_consulta.data_horario|date:"l, d \d\e F \d\e Y" }} às {{ proxima_consulta.data_horario|date:"H:i" }}</p>
+            <p><strong class="text-muted">Modalidade:</strong><br> {{ proxima_consulta.get_modalidade_display }}</p>
+            <p><strong class="text-muted">Status:</strong><br> <span class="badge bg-success-subtle text-success-emphasis">{{ proxima_consulta.get_status_display }}</span></p>
+            <p><strong class="text-muted">Preço:</strong><br> R$ {{ proxima_consulta.nutricionista.preco_consulta }}</p>
+        {% else %}
+            <p>Não há detalhes para exibir.</p> 
+        {% endif %} {# Fim do if proxima_consulta #}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-fechar-detalhes" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {# Fim do bloco content #}
+
 
 {% block extrascripts %}
-{# Script do gráfico removido #}
-{% endblock %}
+<script>
+    $(document).ready(function() {
+        const consultaModalElement = document.getElementById('consultaDetalhesModal');
+        const detalhesLink = $('#verDetalhesConsultaLink');
+
+        if (consultaModalElement && detalhesLink.length) {
+            const consultaModal = new bootstrap.Modal(consultaModalElement);
+            detalhesLink.on('click', function(e) {
+                e.preventDefault(); 
+                consultaModal.show(); 
+            });
+        } else {
+            
+        }
+    });
+</script>
+{% endblock extrascripts %} {# Fim do bloco extrascripts #}
