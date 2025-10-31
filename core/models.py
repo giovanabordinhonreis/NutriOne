@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
+def user_directory_path(instance, filename):
+    return f'user_{instance.usuario.id}/profile_pics/{filename}'
+
 class User(AbstractUser):
     class UserType(models.TextChoices):
         CLIENTE = 'CLIENTE', 'Cliente'
@@ -24,6 +28,9 @@ class Nutricionista(models.Model):
     preco_consulta = models.DecimalField(max_digits=8, decimal_places=2, help_text="Preço por consulta")
     duracao_consulta = models.IntegerField(help_text="Duração da consulta em minutos")
     horarios_disponiveis = models.JSONField(null=True, blank=True)
+    
+    # --- NOVO CAMPO ADICIONADO (Baseado no RF04 e RF20) ---
+    is_approved = models.BooleanField(default=False, help_text="Aprovado pelo Admin")
 
     def __str__(self):
         return self.usuario.get_full_name() or self.usuario.username
@@ -34,6 +41,7 @@ class Cliente(models.Model):
     altura = models.FloatField(null=True, blank=True, help_text="Altura em metros")
     idade = models.IntegerField(null=True, blank=True)
     objetivos = models.TextField(blank=True, null=True)
+    foto_perfil = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
 
     def __str__(self):
         return self.usuario.get_full_name() or self.usuario.username
@@ -53,6 +61,12 @@ class Consulta(models.Model):
     data_horario = models.DateTimeField()
     modalidade = models.CharField(max_length=20, choices=ModalidadeChoices.choices)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.CONFIRMADO)
+    
+   
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['nutricionista', 'data_horario'], name='unique_appointment_time')
+        ]
 
     def __str__(self):
         return f"Consulta de {self.cliente} com {self.nutricionista} em {self.data_horario.strftime('%d/%m/%Y %H:%M')}"
