@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User
-from .models import User, Nutricionista, Especialidade
+from .models import User, Nutricionista, Especialidade, Cliente
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -80,3 +80,20 @@ class NutricionistaProfileForm(forms.ModelForm):
                 required=False,
                 widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm', 'value': '18:00'})
             )
+
+class ClienteProfileForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['peso', 'altura', 'idade', 'objetivos']
+        widgets = {
+            'peso': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 70,5'}),
+            'altura': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 1,75'}),
+            'idade': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 30'}),
+            'objetivos': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Ex: Emagrecimento, ganhar massa...', 'rows': 4}),
+        }
+        labels = {
+            'peso': 'Peso (kg)',
+            'altura': 'Altura (m)',
+            'idade': 'Idade',
+            'objetivos': 'Quais são seus objetivos?',
+        }

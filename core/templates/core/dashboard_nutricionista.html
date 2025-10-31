@@ -1,0 +1,376 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Nutricionista - NutriOne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --verde-salvia: #8A9A5B;
+            --verde-escuro: #7A8A4C;
+            --bege-areia: #F5DEB3;
+            --bege-claro-fundo: #FAF8F0;
+            --cinza-texto: #36454F;
+            --cinza-claro: #f8f9fa;
+            --branco: #FFFFFF;
+            --confirmado-bg: #d1e7dd;
+            --confirmado-text: #0f5132;
+            --concluido-bg: #e2e3e5;
+            --concluido-text: #41464b;
+            --sidebar-width-collapsed: 80px;
+            --sidebar-width-expanded: 260px;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bege-claro-fundo);
+            overflow-x: hidden; 
+        }
+
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width-collapsed);
+            background-color: var(--verde-salvia);
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .sidebar:hover {
+            width: var(--sidebar-width-expanded);
+        }
+
+        .sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--branco);
+            margin-bottom: 30px;
+            padding-left: 15px; 
+            white-space: nowrap;
+            opacity: 0; 
+            transition: opacity 0.2s ease 0.1s; 
+        }
+        .sidebar:hover .logo {
+            opacity: 1;
+        }
+
+        .sidebar .nav-item {
+             overflow: hidden; 
+        }
+
+        .sidebar .nav-link {
+            color: var(--branco);
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap; 
+            transition: background-color 0.2s ease;
+        }
+        .sidebar .nav-link i {
+            margin-right: 15px;
+            font-size: 1.3rem;
+            min-width: 24px; 
+            text-align: center;
+        }
+         .sidebar .nav-link span {
+            opacity: 0; 
+            transition: opacity 0.2s ease;
+        }
+        .sidebar:hover .nav-link span {
+            opacity: 1;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--branco);
+            color: var(--verde-escuro);
+            font-weight: 600;
+        }
+         .sidebar .nav-link.active i{
+            color: var(--verde-escuro); 
+        }
+
+        .sidebar .nav-link:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-profile {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+             overflow: hidden;
+        }
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            min-width: 40px; 
+        }
+
+        .user-profile .user-info {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            color: var(--branco);
+        }
+         .sidebar:hover .user-info {
+            opacity: 1;
+        }
+
+        .user-profile .user-info span {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .user-profile .user-actions {
+            margin-left: auto; 
+            padding-left: 10px;
+        }
+        .user-profile .user-actions a {
+            color: var(--branco);
+            font-size: 1.1rem; 
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        .user-profile .user-actions a:hover {
+            opacity: 1;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            margin-left: var(--sidebar-width-collapsed);
+            transition: margin-left 0.3s ease;
+        }
+        .sidebar:hover ~ .main-content {
+             margin-left: var(--sidebar-width-expanded);
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .main-header h2 {
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+        .btn-novo-agendamento {
+            background-color: var(--verde-salvia);
+            color: var(--branco);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .btn-novo-agendamento:hover {
+            background-color: var(--verde-escuro);
+            color: var(--branco);
+        }
+
+        .date-navigator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .date-navigator a {
+            color: var(--verde-salvia);
+            font-size: 1.8rem;
+            text-decoration: none;
+        }
+
+        .date-navigator span {
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+
+        .schedule-card {
+            background-color: var(--branco);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .schedule-table thead th {
+            border-bottom: 2px solid #eee;
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .schedule-table tbody td {
+            vertical-align: middle;
+            padding: 15px 10px;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        .schedule-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .client-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .tag i {
+            margin-right: 5px;
+        }
+        .tag-online {
+            background-color: #cfe2ff;
+            color: #0d6efd;
+        }
+        .tag-presencial {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        .tag-confirmado {
+            background-color: var(--confirmado-bg);
+            color: var(--confirmado-text);
+        }
+        .tag-concluido {
+            background-color: var(--concluido-bg);
+            color: var(--concluido-text);
+        }
+        .no-appointments {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <aside class="sidebar">
+            <h3 class="logo">NutriOne</h3>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <i class="bi bi-house-door-fill"></i> <span>Início</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="bi bi-people-fill"></i> <span>Meus Clientes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                     <a class="nav-link" href="#">
+                        <i class="bi bi-person-fill"></i> <span>Meu Perfil</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="user-profile">
+                <img src="{% static 'core/images/fundo.jpg' %}" alt="Foto do Nutricionista">
+                <div class="user-info flex-grow-1">
+                    <span>{{ user.get_full_name|default:user.username }}</span>
+                </div>
+                <div class="user-actions">
+                    <a href="{% url 'login' %}" title="Sair"><i class="bi bi-box-arrow-right"></i></a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h2>Olá, {{ user.get_full_name|default:user.username }}!</h2>
+                <a href="#" class="btn btn-novo-agendamento">+ Novo agendamento</a>
+            </header>
+
+            <div class="date-navigator">
+                <a href="?date={{ prev_date }}"><i class="bi bi-chevron-left"></i></a>
+                <span class="fw-semibold">{{ current_date|date:"l, d \\d\\e F \\d\\e Y" }}</span>
+                <a href="?date={{ next_date }}"><i class="bi bi-chevron-right"></i></a>
+            </div>
+
+            <div class="schedule-card">
+                {% if appointments %}
+                    <table class="table schedule-table table-borderless align-middle">
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Modalidade</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in appointments %}
+                            <tr>
+                                <td>{{ app.data_horario|date:"H:i" }} - {{ app.get_end_time|date:"H:i" }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center client-info">
+                                        <img src="{% static 'core/images/placeholder_cliente.png' %}" alt="Foto Cliente">
+                                        <span>{{ app.cliente.usuario.get_full_name|default:app.cliente.usuario.username }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if app.modalidade == 'ONLINE' %}
+                                        <span class="tag tag-online"><i class="bi bi-camera-video-fill"></i> Online</span>
+                                    {% elif app.modalidade == 'PRESENCIAL' %}
+                                        <span class="tag tag-presencial"><i class="bi bi-geo-alt-fill"></i> Presencial</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if app.status == 'CONFIRMADO' %}
+                                        <span class="tag tag-confirmado">Confirmado</span>
+                                    {% elif app.status == 'CONCLUIDO' %}
+                                        <span class="tag tag-concluido">Concluído</span>
+                                    {% elif app.status == 'CANCELADO' %}
+                                        <span class="tag bg-danger text-white">Cancelado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="no-appointments">Você não possui agendamentos para hoje.</p>
+                {% endif %}
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
