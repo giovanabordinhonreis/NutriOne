@@ -1,23 +1,11 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login as auth_login, logout 
+from django.shortcuts import render, redirect
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse 
-from django.views.decorators.http import require_POST 
-from django.utils import timezone 
-from django.db.models import Q 
-from django.db import IntegrityError 
-from datetime import datetime, time, timedelta 
+from .forms import CustomAuthenticationForm, CustomUserCreationForm, NutricionistaProfileForm, ClienteProfileForm
+from .models import Nutricionista, Cliente
+from datetime import datetime, timedelta
+from django.utils import timezone
 
-from .forms import (
-    CustomAuthenticationForm, CustomUserCreationForm, NutricionistaProfileForm,
-    ClienteProfileForm, ClienteProfileUpdateForm, ConsultaForm 
-)
-from .models import (
-    Nutricionista, Cliente, User, Consulta, 
-    PlanoAlimentar, Refeicao, Especialidade
-)
-
-# --- VIEWS DE AUTENTICAÇÃO E CADASTRO (sem alterações) ---
 def login_usuario(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -35,10 +23,6 @@ def login_usuario(request):
         form = CustomAuthenticationForm()
     return render(request, 'core/login.html', {'form': form})
 
-def logout_usuario(request):
-    logout(request)
-    return redirect('login')
-
 def cadastro_cliente(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -52,31 +36,43 @@ def cadastro_cliente(request):
 
 @login_required 
 def selecionar_conta(request):
-    user = request.user
-    if user.user_type == User.UserType.NUTRICIONISTA and hasattr(user, 'perfil_nutricionista'):
-        return redirect('dashboard_nutri')
-    elif user.user_type == User.UserType.CLIENTE and hasattr(user, 'perfil_cliente'):
-        return redirect('dashboard_cliente')
+    redirect_url = _redirecionar_usuario_completo(request.user)
+    if redirect_url:
+        return redirect(redirect_url)
     return render(request, 'core/selecionar_conta.html')
 
-# --- VIEWS DO NUTRICIONISTA (sem alterações) ---
 @login_required
 def cadastro_nutricionista(request):
     if request.method == 'POST':
         form = NutricionistaProfileForm(request.POST)
         if form.is_valid():
-            cd = form.cleaned_data; horarios = {}
-            dias = ['segunda','terca','quarta','quinta','sexta','sabado']
-            for dia in dias:
+            cd = form.cleaned_data
+            
+            horarios = {}
+            dias_semana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']
+            for dia in dias_semana:
                 if cd[f'{dia}_ativo']:
-                    horarios[dia] = { 'inicio': cd[f'{dia}_inicio'].strftime('%H:%M') if cd[f'{dia}_inicio'] else None, 'fim': cd[f'{dia}_fim'].strftime('%H:%M') if cd[f'{dia}_fim'] else None }
-            nutri, created = Nutricionista.objects.update_or_create( usuario=request.user, defaults={ 'preco_consulta': cd['preco_consulta'], 'duracao_consulta': cd['duracao_consulta'], 'horarios_disponiveis': horarios })
-            nutri.especialidades.set(cd['especialidades']); user = request.user
-            user.user_type = User.UserType.NUTRICIONISTA; user.save()
-            nutri.is_approved = False 
-            nutri.save()
+                    horarios[dia] = {
+                        'inicio': cd[f'{dia}_inicio'].strftime('%H:%M') if cd[f'{dia}_inicio'] else None,
+                        'fim': cd[f'{dia}_fim'].strftime('%H:%M') if cd[f'{dia}_fim'] else None,
+                    }
+            
+            nutri_profile, created = Nutricionista.objects.update_or_create(
+                usuario=request.user,
+                defaults={
+                    'preco_consulta': cd['preco_consulta'],
+                    'duracao_consulta': cd['duracao_consulta'],
+                    'horarios_disponiveis': horarios
+                }
+            )
+            
+            nutri_profile.especialidades.clear()
+            nutri_profile.especialidades.add(cd['especialidades'])
+            
             return redirect('dashboard_nutri')
-    else: form = NutricionistaProfileForm()
+    else:
+        form = NutricionistaProfileForm()
+        
     return render(request, 'core/cadastro_nutricionista.html', {'form': form})
 
 @login_required

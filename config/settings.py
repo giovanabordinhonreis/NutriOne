@@ -145,8 +145,3 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 AUTH_USER_MODEL = 'core.User'
-
-
-# Configurações de Mídia (Arquivos enviados pelos usuários)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' # Cria uma pasta 'media' na raiz do projeto
