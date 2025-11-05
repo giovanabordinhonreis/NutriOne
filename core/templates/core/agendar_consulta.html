@@ -1,0 +1,142 @@
+{% extends 'core/base_cliente.html' %}
+{% load static %}
+ 
+{% block title %}Agendar Consulta - {{ block.super }}{% endblock %}
+ 
+{% block extrastyles %}
+<style>
+   
+    .card-custom { border-radius: 24px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); background-color: white; }
+    .form-control, .form-select { border-radius: 24px; padding: 10px 15px; }
+    .btn-agendar { background-color: #8A9A5B; color: white; border-radius: 24px; padding: 12px 24px; font-weight: 500; width: 100%; }
+    .btn-agendar:hover { background-color: #7A8A4C; color: white; }
+    .btn-agendar:disabled { background-color: #ccc; border-color: #ccc; cursor: not-allowed; }
+    .horario-slot { background-color: #f7f9f2; border: 2px solid #e8ede0; color: #7A8A4C; border-radius: 24px; padding: 10px; text-align: center; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+    .horario-slot:hover { background-color: #e8ede0; }
+    .horario-slot.selected { background-color: #7A8A4C; color: white; border-color: #7A8A4C; }
+    /* Estilo para alinhar radio e label */
+    .form-check { display: flex; align-items: center; margin-bottom: 0.5rem; }
+    .form-check-input { margin-top: 0; margin-right: 0.5em; /* Espaço entre radio e texto */ }
+    .form-check-label { margin-bottom: 0; /* Remove margem inferior padrão */ }
+    .form-check-input:checked { background-color: #8A9A5B; border-color: #8A9A5B; }
+</style>
+{% endblock %}
+ 
+{% block content %}
+<h2 class="h4 fw-bold mb-4">Agendar Consulta</h2>
+ 
+<form method="POST" id="agendamentoForm">
+    {% csrf_token %}
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card card-custom">
+                <div class="card-body p-4 p-md-5">
+                    <h5 class="fw-bold mb-3">Nutricionista</h5>
+                    <p class="fs-5">{{ nutricionista.usuario.get_full_name }}</p>
+                    <hr class="my-4">
+                   
+                    <div class="mb-4">
+                        <label for="data_agendamento" class="form-label fw-bold">1. Escolha uma data</label>
+                        <input type="date" class="form-control" id="data_agendamento"
+                               name="data_agendamento"
+                               min="{{ today|date:'Y-m-d' }}">
+                    </div>
+ 
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">2. Escolha um horário</label>
+                        <div id="horariosDisponiveis" class="row g-2">
+                            <p id="horariosLoading" class="text-muted" style="display: none;">Carregando...</p>
+                            <p id="horariosMsg" class="text-muted">Selecione uma data para ver os horários.</p>
+                        </div>
+                    </div>
+                   
+                    <div class="mb-3">
+                         <label class="form-label fw-bold d-block mb-2">3. Escolha a modalidade</label> {# Adicionado d-block mb-2 #}
+                         
+                         {# --- CORREÇÃO AQUI --- #}
+                         {# Renderiza cada opção do RadioSelect individualmente #}
+                         {% for choice in form.modalidade %}
+                            <div class="form-check">
+                                {{ choice.tag }} {# Renderiza o <input type="radio"> #}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }} {# Renderiza o texto (Presencial/Online) #}
+                                </label>
+                            </div>
+                         {% endfor %}
+                         {# --- FIM DA CORREÇÃO --- #}
+                    </div>
+ 
+                    {{ form.data_horario_selecionado }}
+ 
+                </div>
+            </div>
+        </div>
+       
+        <div class="col-lg-5">
+            <div class="card card-custom" style="position: sticky; top: 20px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Resumo</h5>
+                    <div class="d-flex justify-content-between mb-2"> <span class="text-muted">Nutricionista:</span> <span class="fw-bold">{{ nutricionista.usuario.get_full_name }}</span> </div>
+                    <div class="d-flex justify-content-between mb-2"> <span class="text-muted">Data:</span> <span class="fw-bold" id="resumoData">--/--/----</span> </div>
+                     <div class="d-flex justify-content-between mb-3"> <span class="text-muted">Horário:</span> <span class="fw-bold" id="resumoHorario">--:--</span> </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fs-5"> <span class="text-muted">Preço Total:</span> <span class="fw-bold" style="color: #8A9A5B;">R$ {{ nutricionista.preco_consulta }}</span> </div>
+                    <button type="submit" class="btn btn-agendar mt-4" id="btnConfirmarAgendamento" disabled> Confirmar Agendamento </button>
+                    {% if form.non_field_errors %} <div class="alert alert-danger mt-3">{{ form.non_field_errors.0 }}</div> {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+ 
+{% block extrascripts %}
+<script>
+   
+    $(document).ready(function() {
+        const dataInput = $('#data_agendamento');
+        const horariosContainer = $('#horariosDisponiveis');
+        const horariosMsg = $('#horariosMsg');
+        const horariosLoading = $('#horariosLoading');
+        const hiddenHorarioInput = $('#id_data_horario_selecionado');
+        const btnConfirmar = $('#btnConfirmarAgendamento');
+        const resumoData = $('#resumoData');
+        const resumoHorario = $('#resumoHorario');
+        const nutriId = "{{ nutricionista.id }}";
+        let horarioSelecionado = null;
+ 
+        dataInput.on('change', function() {
+            const dataSelecionada = $(this).val();
+            if (!dataSelecionada) { horariosContainer.html(''); horariosMsg.text('Selecione uma data para ver os horários.').show(); return; }
+            const dataObj = new Date(dataSelecionada + 'T00:00:00'); const dataFormatada = dataObj.toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+            resumoData.text(dataFormatada); resumoHorario.text('--:--'); horarioSelecionado = null; btnConfirmar.prop('disabled', true);
+            $.ajax({
+                url: "{% url 'api_horarios_disponiveis' %}", data: { 'nutri_id': nutriId, 'data': dataSelecionada },
+                beforeSend: function() { horariosContainer.html(''); horariosLoading.show(); horariosMsg.hide(); },
+                success: function(data) {
+                    horariosLoading.hide();
+                    if (data.horarios && data.horarios.length > 0) {
+                        data.horarios.forEach(function(slot) {
+                            const slotHtml = `<div class="col-4 col-md-3"><div class="horario-slot" data-valor-iso="${slot.valor_iso}" data-valor-display="${slot.display}">${slot.display}</div></div>`;
+                            horariosContainer.append(slotHtml);
+                        });
+                    } else { horariosMsg.text('Nenhum horário disponível para este dia.').show(); }
+                },
+                error: function(err) { horariosLoading.hide(); console.error(err); horariosMsg.text('Erro ao buscar horários. Tente novamente.').show(); }
+            });
+        });
+ 
+        horariosContainer.on('click', '.horario-slot', function() {
+            $('.horario-slot').removeClass('selected'); $(this).addClass('selected');
+            horarioSelecionado = $(this).data('valor-iso'); const displayHorario = $(this).data('valor-display');
+            hiddenHorarioInput.val(horarioSelecionado); resumoHorario.text(displayHorario);
+            btnConfirmar.prop('disabled', false);
+        });
+ 
+        $('#agendamentoForm').on('submit', function(e) {
+            if (!horarioSelecionado) { e.preventDefault(); alert("Por favor, selecione um horário."); return; }
+            if ($('input[name="modalidade"]:checked').length === 0) { e.preventDefault(); alert("Por favor, selecione a modalidade."); }
+        });
+    });
+</script>
+{% endblock %}

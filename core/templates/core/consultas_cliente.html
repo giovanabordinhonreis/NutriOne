@@ -1,0 +1,136 @@
+{% extends 'core/base_cliente.html' %}
+{% load static %}
+ 
+{% block title %}Meus Agendamentos - {{ block.super }}{% endblock %}
+ 
+{% block extrastyles %}
+<style>
+    .card-custom {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background-color: white;
+    }
+    .consulta-item {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    .consulta-item:last-child {
+        border-bottom: none;
+    }
+    .consulta-data {
+        background-color: #f7f9f2;
+        border: 1px solid #e8ede0;
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+        margin-right: 1.5rem;
+        min-width: 90px;
+    }
+    .consulta-data .mes {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        font-weight: 500;
+        color: #8A9A5B;
+    }
+    .consulta-data .dia {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.2;
+    }
+    .consulta-data .hora {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .consulta-info h5 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .consulta-info p {
+        margin-bottom: 0;
+        color: #6c757d;
+    }
+    .consulta-status {
+        margin-left: auto;
+    }
+    .badge-status {
+        border-radius: 24px;
+        padding: 0.5em 1em;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+    .no-data-message {
+        color: #6c757d;
+        text-align: center;
+        padding: 2rem 0;
+    }
+</style>
+{% endblock %}
+ 
+{% block content %}
+<h2 class="h4 fw-bold mb-4">Meus Agendamentos</h2>
+ 
+<div class="card card-custom mb-4">
+    <div class="card-body p-3">
+        <h5 class="card-title fw-bold p-3 mb-0">Próximas Consultas</h5>
+        {% if consultas_futuras %}
+            {% for consulta in consultas_futuras %}
+            <div class="consulta-item">
+                <div class="consulta-data">
+                    <span class="mes">{{ consulta.data_horario|date:"M" }}</span>
+                    <span class="dia">{{ consulta.data_horario|date:"d" }}</span>
+                    <span class="hora">{{ consulta.data_horario|date:"H:i" }}</span>
+                </div>
+                <div class="consulta-info">
+                    <h5>{{ consulta.nutricionista.usuario.get_full_name }}</h5>
+                    <p><i class="bi bi-person-fill"></i> Especialidade (Ex: Emagrecimento)</p>
+                    <p><i class="bi bi-camera-video-fill"></i> {{ consulta.get_modalidade_display }}</p>
+                </div>
+                <div class="consulta-status">
+                    {% if consulta.status == 'CONFIRMADO' %}
+                        <span class="badge bg-success-subtle text-success-emphasis badge-status">Confirmado</span>
+                    {% elif consulta.status == 'CANCELADO' %}
+                         <span class="badge bg-danger-subtle text-danger-emphasis badge-status">Cancelado</span>
+                    {% endif %}
+                    <a href="#" class="btn btn-outline-danger btn-sm ms-2" style="border-radius: 24px;">Cancelar</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-data-message">Você não possui nenhuma consulta futura agendada.</p>
+        {% endif %}
+    </div>
+</div>
+ 
+<div class="card card-custom">
+    <div class="card-body p-3">
+        <h5 class="card-title fw-bold p-3 mb-0">Consultas Passadas</h5>
+        {% if consultas_passadas %}
+             {% for consulta in consultas_passadas %}
+            <div class="consulta-item">
+                <div class="consulta-data">
+                    <span class="mes">{{ consulta.data_horario|date:"M" }}</span>
+                    <span class="dia">{{ consulta.data_horario|date:"d" }}</span>
+                    <span class="hora">{{ consulta.data_horario|date:"H:i" }}</span>
+                </div>
+                <div class="consulta-info">
+                    <h5>{{ consulta.nutricionista.usuario.get_full_name }}</h5>
+                    <p><i class="bi bi-camera-video-fill"></i> {{ consulta.get_modalidade_display }}</p>
+                </div>
+                <div class="consulta-status">
+                     <span class="badge bg-secondary-subtle text-secondary-emphasis badge-status">{{ consulta.get_status_display }}</span>
+                     <a href="#" class="btn btn-outline-primary btn-sm ms-2" style="border-radius: 24px;">Ver Plano</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-data-message">Você não possui histórico de consultas.</p>
+        {% endif %}
+    </div>
+</div>
+ 
+{% endblock %}
+ 
