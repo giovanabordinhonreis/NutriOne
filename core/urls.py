@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+ 
 urlpatterns = [
     # Autenticação
     path('login/', views.login_usuario, name='login'),
@@ -18,3 +18,4 @@ urlpatterns = [
     path('cliente/api/horarios-disponiveis/', views.api_horarios_disponiveis, name='api_horarios_disponiveis'),
     path('cliente/planos/', views.planos_alimentares_cliente, name='planos_alimentares_cliente'),
 ]
+ 

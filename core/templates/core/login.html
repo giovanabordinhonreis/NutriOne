@@ -95,7 +95,7 @@
                         <form method="post">
                             {% csrf_token %} {{ form|crispy }} <button type="submit" class="btn btn-custom-primary mt-4">Entrar</button>
                             <a href="{% url 'cadastro' %}" class="btn btn-custom-secondary mt-3">Cadastrar-se</a>
-                
+               
                             <div class="text-center mt-3">
                                 <a href="#" class="text-white small">Esqueceu sua senha?</a>
                             </div>
@@ -111,4 +111,5 @@
     </div>
 </body>
 </html>
+ 
  

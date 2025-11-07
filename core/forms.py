@@ -23,25 +23,17 @@ class CustomUserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
-
+ 
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update(
-            {'class': 'form-control', 'placeholder': 'Digite seu e-mail'}
-        )
-        self.fields['password'].widget.attrs.update(
-            {'class': 'form-control', 'placeholder': 'Digite sua senha'}
-        )
-        self.fields['username'].label = ""
-        self.fields['password'].label = ""
+        self.fields['username'].widget.attrs.update( {'class': 'form-control', 'placeholder': 'Digite seu e-mail'} )
+        self.fields['password'].widget.attrs.update( {'class': 'form-control', 'placeholder': 'Digite sua senha'} )
+        self.fields['username'].label = ""; self.fields['password'].label = ""
 
 class NutricionistaProfileForm(forms.ModelForm):
-    especialidades = forms.ModelMultipleChoiceField(
-        queryset=Especialidade.objects.all(),
-        label="Especialidades",
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
-    )
+    
+    especialidades = forms.ModelChoiceField( queryset=Especialidade.objects.all(), label="Especialidades", empty_label="Selecione sua principal especialidade", widget=forms.Select(attrs={'class': 'form-select'}) )
     class Meta:
         model = Nutricionista
         fields = ['especialidades', 'preco_consulta', 'duracao_consulta']
@@ -56,57 +48,40 @@ class NutricionistaProfileForm(forms.ModelForm):
             self.fields[f'{dia_key}_inicio'] = forms.TimeField( required=False, widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm', 'value': '08:00'}) )
             self.fields[f'{dia_key}_fim'] = forms.TimeField( required=False, widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm', 'value': '18:00'}) )
 
-
 class ClienteProfileForm(forms.ModelForm):
-    OBJETIVO_CHOICES = [
-        ('', 'Selecione seu principal objetivo'),
-        ('EMAGRECIMENTO', 'Emagrecimento'),
-        ('GANHO_MASSA', 'Ganho de Massa Muscular'),
-        ('REEDUCACAO_ALIMENTAR', 'Reeducação Alimentar'),
-        ('NUTRICAO_ESPORTIVA', 'Nutrição Esportiva'),
-        ('MELHORAR_SAUDE', 'Melhorar a Saúde/Disposição'),
-        ('OUTRO', 'Outro'),
-    ]
-
-    objetivos = forms.ChoiceField(
-        choices=OBJETIVO_CHOICES,
-        label="Objetivos", 
-        widget=forms.Select(attrs={'class': 'form-select', 'style': 'border-radius: 24px; padding: 12px;'}) 
-    )
-
+    
+    OBJETIVO_CHOICES = [ ('', 'Selecione seu principal objetivo'), ('EMAGRECIMENTO', 'Emagrecimento'), ('GANHO_MASSA', 'Ganho de Massa Muscular'), ('REEDUCACAO_ALIMENTAR', 'Reeducação Alimentar'), ('NUTRICAO_ESPORTIVA', 'Nutrição Esportiva'), ('MELHORAR_SAUDE', 'Melhorar a Saúde/Disposição'), ('OUTRO', 'Outro'), ]
+    objetivos = forms.ChoiceField( choices=OBJETIVO_CHOICES, label="Objetivos", widget=forms.Select(attrs={'class': 'form-select'}) )
     class Meta:
-        model = Cliente
-        fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos']
-        labels = {
-            'foto_perfil': 'Foto de Perfil (Opcional)', 
-            'peso': 'Peso (kg)',
-            'altura': 'Altura (m)',
-            'idade': 'Idade',
-            'objetivos': 'Objetivos', 
-        }
-        widgets = {
-            'foto_perfil': forms.ClearableFileInput(attrs={'class': 'form-control', 'style': 'border-radius: 24px; padding: 12px;'}),
-            'peso': forms.NumberInput(attrs={'placeholder': '75,5', 'style': 'border-radius: 24px; padding: 12px;'}),
-            'altura': forms.NumberInput(attrs={'placeholder': '1.78', 'style': 'border-radius: 24px; padding: 12px;'}),
-            'idade': forms.NumberInput(attrs={'placeholder': '30', 'style': 'border-radius: 24px; padding: 12px;'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+        model = Cliente; fields = ['peso', 'altura', 'idade', 'objetivos']
+        labels = { 'peso': 'Peso (kg)', 'altura': 'Altura (m)', 'idade': 'Idade', }
+        widgets = { 'peso': forms.NumberInput(attrs={'placeholder': '75,5', 'class': 'form-control'}), 'altura': forms.NumberInput(attrs={'placeholder': '1.78', 'class': 'form-control'}), 'idade': forms.NumberInput(attrs={'placeholder': '30', 'class': 'form-control'}), }
 
 class ClienteProfileUpdateForm(forms.ModelForm):
+   
     OBJETIVO_CHOICES = ClienteProfileForm.OBJETIVO_CHOICES 
     objetivos = forms.ChoiceField( choices=OBJETIVO_CHOICES, label="Objetivos", widget=forms.Select(attrs={'class': 'form-select'}) )
     foto_perfil = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
     class Meta:
-        model = Cliente; fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos'] 
+        model = Cliente; fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos']
         labels = { 'foto_perfil': 'Foto de Perfil', 'peso': 'Peso (kg)', 'altura': 'Altura (m)', 'idade': 'Idade', }
         widgets = { 'peso': forms.NumberInput(attrs={'class': 'form-control'}), 'altura': forms.NumberInput(attrs={'class': 'form-control'}), 'idade': forms.NumberInput(attrs={'class': 'form-control'}), }
 
+
 class ConsultaForm(forms.ModelForm):
-    modalidade = forms.ChoiceField( choices=Consulta.ModalidadeChoices.choices, widget=forms.RadioSelect(attrs={'class': 'form-check-input'}), label="Modalidade" )
-    data_horario_selecionado = forms.DateTimeField( widget=forms.HiddenInput(), required=True )
+    
+    modalidade = forms.ChoiceField(
+        choices=Consulta.ModalidadeChoices.choices,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label="Modalidade"
+    )
+    
+    data_horario_selecionado = forms.DateTimeField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
     class Meta:
         model = Consulta
         fields = ['modalidade', 'data_horario_selecionado']
+ 

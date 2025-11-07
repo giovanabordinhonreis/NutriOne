@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login as auth_login, logout 
+from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse 
 from django.views.decorators.http import require_POST 
@@ -11,10 +11,10 @@ import unicodedata
 
 from .forms import (
     CustomAuthenticationForm, CustomUserCreationForm, NutricionistaProfileForm,
-    ClienteProfileForm, ClienteProfileUpdateForm, ConsultaForm 
+    ClienteProfileForm, ClienteProfileUpdateForm, ConsultaForm
 )
 from .models import (
-    Nutricionista, Cliente, User, Consulta, 
+    Nutricionista, Cliente, User, Consulta,
     PlanoAlimentar, Refeicao, Especialidade
 )
 
@@ -43,22 +43,22 @@ def login_usuario(request):
             else: return redirect('selecionar_conta')
     else: form = CustomAuthenticationForm()
     return render(request, 'core/login.html', {'form': form})
-
+ 
 def logout_usuario(request):
     logout(request)
     return redirect('login')
-
+ 
 def cadastro_cliente(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return redirect('selecionar_conta') 
+            return redirect('selecionar_conta')
     else: form = CustomUserCreationForm()
     return render(request, 'core/cadastro.html', {'form': form})
-
-@login_required 
+ 
+@login_required
 def selecionar_conta(request):
     user = request.user
     if user.user_type == User.UserType.NUTRICIONISTA and hasattr(user, 'perfil_nutricionista'):
@@ -81,17 +81,17 @@ def cadastro_nutricionista(request):
             nutri, created = Nutricionista.objects.update_or_create( usuario=request.user, defaults={ 'preco_consulta': cd['preco_consulta'], 'duracao_consulta': cd['duracao_consulta'], 'horarios_disponiveis': horarios })
             nutri.especialidades.set(cd['especialidades']); user = request.user
             user.user_type = User.UserType.NUTRICIONISTA; user.save()
-            nutri.is_approved = False 
+            nutri.is_approved = False
             nutri.save()
             return redirect('dashboard_nutri')
     else: form = NutricionistaProfileForm()
     return render(request, 'core/cadastro_nutricionista.html', {'form': form})
-
+ 
 @login_required
 def dashboard_nutricionista(request):
-    context = {} 
+    context = {}
     return render(request, 'core/dashboard_nutricionista.html', context)
-
+ 
 # --- VIEWS DO CLIENTE ---
 @login_required
 def cadastro_cliente_perfil(request):
@@ -103,7 +103,7 @@ def cadastro_cliente_perfil(request):
             return redirect('dashboard_cliente')
     else: form = ClienteProfileForm()
     return render(request, 'core/cadastro_cliente_perfil.html', {'form': form})
-
+ 
 @login_required
 def dashboard_cliente(request):
     try:
@@ -125,7 +125,7 @@ def dashboard_cliente(request):
     form_update = ClienteProfileUpdateForm(instance=cliente)
     context = { 'cliente': cliente, 'proxima_consulta': proxima_consulta, 'plano_atual': plano_atual, 'refeicoes': refeicoes_dict, 'form_update': form_update }
     return render(request, 'core/dashboard_cliente.html', context)
-
+ 
 @login_required
 def perfil_cliente(request):
     try:
@@ -144,7 +144,7 @@ def perfil_cliente(request):
             return JsonResponse(data)
         else: return redirect('dashboard_cliente')
     return JsonResponse({'error': 'Método não permitido'}, status=405)
-
+ 
 @login_required
 def consultas_cliente(request):
     try:
@@ -156,7 +156,7 @@ def consultas_cliente(request):
     consultas_passadas = Consulta.objects.filter( cliente=cliente, data_horario__lt=now ).order_by('-data_horario')
     context = { 'consultas_futuras': consultas_futuras, 'consultas_passadas': consultas_passadas }
     return render(request, 'core/consultas_cliente.html', context)
-
+ 
 @login_required
 def encontrar_nutricionista(request):
     nutricionistas = Nutricionista.objects.filter(is_approved=True)

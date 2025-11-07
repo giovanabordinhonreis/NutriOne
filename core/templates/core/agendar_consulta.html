@@ -1,11 +1,11 @@
 {% extends 'core/base_cliente.html' %}
 {% load static %}
-
+ 
 {% block title %}Agendar Consulta - {{ block.super }}{% endblock %}
-
+ 
 {% block extrastyles %}
 <style>
-    
+   
     .card-custom { border-radius: 24px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); background-color: white; }
     .form-control, .form-select { border-radius: 24px; padding: 10px 15px; }
     .btn-agendar { background-color: #8A9A5B; color: white; border-radius: 24px; padding: 12px 24px; font-weight: 500; width: 100%; }
@@ -21,10 +21,10 @@
     .form-check-input:checked { background-color: #8A9A5B; border-color: #8A9A5B; }
 </style>
 {% endblock %}
-
+ 
 {% block content %}
 <h2 class="h4 fw-bold mb-4">Agendar Consulta</h2>
-
+ 
 <form method="POST" id="agendamentoForm">
     {% csrf_token %}
     <div class="row g-4">
@@ -34,14 +34,14 @@
                     <h5 class="fw-bold mb-3">Nutricionista</h5>
                     <p class="fs-5">{{ nutricionista.usuario.get_full_name }}</p>
                     <hr class="my-4">
-                    
+                   
                     <div class="mb-4">
                         <label for="data_agendamento" class="form-label fw-bold">1. Escolha uma data</label>
-                        <input type="date" class="form-control" id="data_agendamento" 
-                               name="data_agendamento" 
+                        <input type="date" class="form-control" id="data_agendamento"
+                               name="data_agendamento"
                                min="{{ today|date:'Y-m-d' }}">
                     </div>
-
+ 
                     <div class="mb-4">
                         <label class="form-label fw-bold">2. Escolha um horário</label>
                         <div id="horariosDisponiveis" class="row g-2">
@@ -49,7 +49,7 @@
                             <p id="horariosMsg" class="text-muted">Selecione uma data para ver os horários.</p>
                         </div>
                     </div>
-                    
+                   
                     <div class="mb-3">
                          <label class="form-label fw-bold d-block mb-2">3. Escolha a modalidade</label> {# Adicionado d-block mb-2 #}
                          
@@ -65,13 +65,13 @@
                          {% endfor %}
                          {# --- FIM DA CORREÇÃO --- #}
                     </div>
-
+ 
                     {{ form.data_horario_selecionado }}
-
+ 
                 </div>
             </div>
         </div>
-        
+       
         <div class="col-lg-5">
             <div class="card card-custom" style="position: sticky; top: 20px;">
                 <div class="card-body p-4">
@@ -89,10 +89,10 @@
     </div>
 </form>
 {% endblock %}
-
+ 
 {% block extrascripts %}
 <script>
-    
+   
     $(document).ready(function() {
         const dataInput = $('#data_agendamento');
         const horariosContainer = $('#horariosDisponiveis');
@@ -103,10 +103,10 @@
         const resumoData = $('#resumoData');
         const resumoHorario = $('#resumoHorario');
         const nutriId = "{{ nutricionista.id }}";
-        let horarioSelecionado = null; 
-
+        let horarioSelecionado = null;
+ 
         dataInput.on('change', function() {
-            const dataSelecionada = $(this).val(); 
+            const dataSelecionada = $(this).val();
             if (!dataSelecionada) { horariosContainer.html(''); horariosMsg.text('Selecione uma data para ver os horários.').show(); return; }
             const dataObj = new Date(dataSelecionada + 'T00:00:00'); const dataFormatada = dataObj.toLocaleDateString('pt-BR', {timeZone: 'UTC'});
             resumoData.text(dataFormatada); resumoHorario.text('--:--'); horarioSelecionado = null; btnConfirmar.prop('disabled', true);
@@ -125,14 +125,14 @@
                 error: function(err) { horariosLoading.hide(); console.error(err); horariosMsg.text('Erro ao buscar horários. Tente novamente.').show(); }
             });
         });
-
+ 
         horariosContainer.on('click', '.horario-slot', function() {
             $('.horario-slot').removeClass('selected'); $(this).addClass('selected');
             horarioSelecionado = $(this).data('valor-iso'); const displayHorario = $(this).data('valor-display');
             hiddenHorarioInput.val(horarioSelecionado); resumoHorario.text(displayHorario);
-            btnConfirmar.prop('disabled', false); 
+            btnConfirmar.prop('disabled', false);
         });
-
+ 
         $('#agendamentoForm').on('submit', function(e) {
             if (!horarioSelecionado) { e.preventDefault(); alert("Por favor, selecione um horário."); return; }
             if ($('input[name="modalidade"]:checked').length === 0) { e.preventDefault(); alert("Por favor, selecione a modalidade."); }

@@ -1,8 +1,8 @@
 {% extends 'core/base_cliente.html' %}
 {% load static %}
-
+ 
 {% block title %}Dashboard - {{ block.super }}{% endblock %}
-
+ 
 {% block extrastyles %}
 <style>
     .btn-primary-custom { background-color: #8A9A5B; border-color: #8A9A5B; border-radius: 24px; padding: 10px 20px; font-weight: 500; }
@@ -28,8 +28,8 @@
     #consultaDetalhesModal .btn-fechar-detalhes { border-radius: 24px; padding: 10px 20px; }
 </style>
 {% endblock %}
-
-
+ 
+ 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -40,15 +40,15 @@
         <i class="bi bi-plus-lg"></i> Agendar nova consulta
     </a>
 </div>
-
+ 
 <div class="row g-4">
-    <div class="col-lg-12"> 
+    <div class="col-lg-12">
         <div class="card card-custom mb-4">
             <div class="card-body p-4">
                 <h5 class="card-title fw-bold">Sua Próxima Consulta</h5>
                 {% if proxima_consulta %}
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <p class="text-muted mb-0">com Dr(a). {{ proxima_consulta.nutricionista.usuario.get_full_name }}</p> 
+                        <p class="text-muted mb-0">com Dr(a). {{ proxima_consulta.nutricionista.usuario.get_full_name }}</p>
                         {% if proxima_consulta.modalidade == 'ONLINE' %} <span class="badge-online">Online</span>
                         {% else %} <span class="badge bg-secondary rounded-pill">Presencial</span> {% endif %}
                     </div>
@@ -75,7 +75,7 @@
         </div>
     </div>
 </div>
-
+ 
 <div class="modal fade" id="consultaDetalhesModal" tabindex="-1" aria-labelledby="consultaDetalhesModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius: 24px;">
@@ -85,14 +85,14 @@
       </div>
       <div class="modal-body">
         {# O conteúdo do modal só é renderizado se houver uma próxima consulta #}
-        {% if proxima_consulta %} 
+        {% if proxima_consulta %}
             <p><strong class="text-muted">Nutricionista:</strong><br> {{ proxima_consulta.nutricionista.usuario.get_full_name }}</p>
             <p><strong class="text-muted">Data e Hora:</strong><br> {{ proxima_consulta.data_horario|date:"l, d \d\e F \d\e Y" }} às {{ proxima_consulta.data_horario|date:"H:i" }}</p>
             <p><strong class="text-muted">Modalidade:</strong><br> {{ proxima_consulta.get_modalidade_display }}</p>
             <p><strong class="text-muted">Status:</strong><br> <span class="badge bg-success-subtle text-success-emphasis">{{ proxima_consulta.get_status_display }}</span></p>
             <p><strong class="text-muted">Preço:</strong><br> R$ {{ proxima_consulta.nutricionista.preco_consulta }}</p>
         {% else %}
-            <p>Não há detalhes para exibir.</p> 
+            <p>Não há detalhes para exibir.</p>
         {% endif %} {# Fim do if proxima_consulta #}
       </div>
       <div class="modal-footer">
@@ -102,23 +102,24 @@
   </div>
 </div>
 {% endblock content %} {# Fim do bloco content #}
-
-
+ 
+ 
 {% block extrascripts %}
 <script>
     $(document).ready(function() {
         const consultaModalElement = document.getElementById('consultaDetalhesModal');
         const detalhesLink = $('#verDetalhesConsultaLink');
-
+ 
         if (consultaModalElement && detalhesLink.length) {
             const consultaModal = new bootstrap.Modal(consultaModalElement);
             detalhesLink.on('click', function(e) {
-                e.preventDefault(); 
-                consultaModal.show(); 
+                e.preventDefault();
+                consultaModal.show();
             });
         } else {
-            
+           
         }
     });
 </script>
 {% endblock extrascripts %} {# Fim do bloco extrascripts #}
+ 

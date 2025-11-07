@@ -1,6 +1,6 @@
 {% load static %}
 {% load crispy_forms_tags %}
-
+ 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
+ 
     <style>
         body, html {
             height: 100%;
@@ -39,7 +39,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             max-width: 700px;
             width: 100%;
-            background-color: white; 
+            background-color: white;
         }
         .register-header {
             background-color: #8A9A5B;
@@ -51,11 +51,11 @@
             border-radius: 24px;
             padding: 12px;
         }
-        
-
+       
+ 
         .btn-custom-primary {
             background-color: transparent;
-            border: 2px solid #8A9A5B; 
+            border: 2px solid #8A9A5B;
             color: #8A9A5B;
             border-radius: 24px;
             padding: 12px;
@@ -67,7 +67,7 @@
             color: white;
         }
         .btn-custom-secondary {
-            background-color: #8A9A5B; 
+            background-color: #8A9A5B;
             border: 2px solid #8A9A5B;
             color: white;
             border-radius: 24px;
@@ -76,15 +76,15 @@
             font-weight: bold;
         }
         .btn-custom-secondary:hover {
-            background-color: #4A5D23; 
+            background-color: #4A5D23;
             color: white;
         }
     </style>
 </head>
 <body>
-
+ 
     <div class="bg-image"></div>
-
+ 
     <div class="container register-container d-flex justify-content-center align-items-center">
         <div class="card register-card">
             <div class="register-header text-center">
@@ -93,7 +93,7 @@
             <div class="card-body p-5">
                 <form method="post" novalidate>
                     {% csrf_token %}
-                    
+                   
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.first_name|as_crispy_field }}
@@ -118,7 +118,7 @@
                             {{ form.password2|as_crispy_field }}
                         </div>
                     </div>
-
+ 
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-custom-secondary">Cadastrar</button>
                         <a href="{% url 'login' %}" class="btn btn-custom-primary">Já possuo uma conta</a>
@@ -127,6 +127,7 @@
             </div>
         </div>
     </div>
-
+ 
 </body>
 </html>
+ 

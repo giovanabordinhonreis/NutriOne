@@ -1,8 +1,8 @@
 {% extends 'core/base_cliente.html' %}
 {% load static %}
-
+ 
 {% block title %}Meus Agendamentos - {{ block.super }}{% endblock %}
-
+ 
 {% block extrastyles %}
 <style>
     .card-custom {
@@ -69,10 +69,10 @@
     }
 </style>
 {% endblock %}
-
+ 
 {% block content %}
 <h2 class="h4 fw-bold mb-4">Meus Agendamentos</h2>
-
+ 
 <div class="card card-custom mb-4">
     <div class="card-body p-3">
         <h5 class="card-title fw-bold p-3 mb-0">Próximas Consultas</h5>
@@ -104,7 +104,7 @@
         {% endif %}
     </div>
 </div>
-
+ 
 <div class="card card-custom">
     <div class="card-body p-3">
         <h5 class="card-title fw-bold p-3 mb-0">Consultas Passadas</h5>
@@ -131,5 +131,6 @@
         {% endif %}
     </div>
 </div>
-
+ 
 {% endblock %}
+ 
