@@ -1,0 +1,134 @@
+{% extends 'core/base_cliente.html' %}
+{% load static %}
+
+{% block title %}Meus Planos Alimentares - {{ block.super }}{% endblock %}
+
+{% block extrastyles %}
+<style>
+    .card-custom {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background-color: white;
+    }
+    .no-data-message {
+        color: #6c757d;
+        text-align: center;
+        padding: 2rem 0;
+    }
+    
+    
+    .accordion-item {
+        background-color: #fff;
+        border: 1px solid #eee;
+        border-radius: 24px !important; 
+        margin-bottom: 1rem;
+        overflow: hidden; 
+    }
+    .accordion-header {
+        border-radius: 24px !important;
+    }
+    .accordion-button {
+        border-radius: 24px !important;
+        background-color: #f7f9f2; 
+        color: #333;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .accordion-button.cafe { background-color: #FFF4E6; }
+    .accordion-button.almoco { background-color: #E6F7EA; }
+    .accordion-button.lanche { background-color: #FFF9E6; }
+    .accordion-button.jantar { background-color: #F3E5F5; }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #8A9A5B;
+        color: white;
+        box-shadow: none;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+    .accordion-body {
+        background-color: #fff;
+        padding: 1.5rem;
+    }
+    .refeicao-detalhe p {
+        margin-bottom: 0.5rem;
+    }
+    .refeicao-detalhe strong {
+        color: #333;
+        min-width: 120px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="h4 fw-bold mb-4">Meu Plano Alimentar</h2>
+
+{% if plano_atual %}
+    <div class="card card-custom mb-4">
+        <div class="card-body p-4">
+            <h5 class="card-title fw-bold">Plano criado por Dr(a). {{ plano_atual.nutricionista.usuario.get_full_name }}</h5>
+            <p class="card-subtitle mb-2 text-muted">Data: {{ plano_atual.data_criacao|date:"d/m/Y" }}</p>
+            <hr>
+            <h6 class="fw-bold">Observações do Nutricionista:</h6>
+            {% if plano_atual.observacoes %}
+                <p class="mb-0">{{ plano_atual.observacoes|linebreaksbr }}</p>
+            {% else %}
+                <p class="text-muted mb-0">Nenhuma observação geral fornecida.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3">Refeições do Dia</h5>
+    <div class="accordion" id="accordionPlano">
+        {% for refeicao in refeicoes %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-{{ refeicao.id }}">
+                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} 
+                                 {% if 'Café' in refeicao.nome %}cafe{% endif %}
+                                 {% if 'Almoço' in refeicao.nome %}almoco{% endif %}
+                                 {% if 'Lanche' in refeicao.nome %}lanche{% endif %}
+                                 {% if 'Jantar' in refeicao.nome %}jantar{% endif %}" 
+                            type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse-{{ refeicao.id }}" 
+                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                            aria-controls="collapse-{{ refeicao.id }}">
+                        {{ refeicao.nome }}
+                    </button>
+                </h2>
+                <div id="collapse-{{ refeicao.id }}" 
+                     class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                     aria-labelledby="heading-{{ refeicao.id }}">
+                    <div class="accordion-body refeicao-detalhe">
+                        <p><strong>Alimentos:</strong> {{ refeicao.alimentos|linebreaksbr }}</p>
+                        <p><strong>Quantidades:</strong> {{ refeicao.quantidades|default:"N/A" }}</p>
+                        <p><strong>Calorias:</strong> {{ refeicao.calorias|default:"N/A" }} kcal</p>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card card-custom">
+                <div class="card-body">
+                    <p class="no-data-message">Seu nutricionista ainda não cadastrou nenhuma refeição para este plano.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% else %}
+    <div class="card card-custom">
+        <div class="card-body">
+            <p class="no-data-message">
+                Você ainda não possui um plano alimentar.
+                <br>
+                <small>Seu nutricionista irá criar um para você após a sua consulta.</small>
+            </p>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -5,8 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST 
 from django.utils import timezone 
 from django.db.models import Q 
-from django.db import IntegrityError 
+from django.db import IntegrityError, transaction
 from datetime import datetime, time, timedelta 
+import unicodedata
 
 from .forms import (
     CustomAuthenticationForm, CustomUserCreationForm, NutricionistaProfileForm,
@@ -17,7 +18,18 @@ from .models import (
     PlanoAlimentar, Refeicao, Especialidade
 )
 
-# --- VIEWS DE AUTENTICAÇÃO E CADASTRO (sem alterações) ---
+
+def normalizar_nome_refeicao(nome):
+    if not nome:
+        return ""
+    
+    nfkd_form = unicodedata.normalize('NFKD', nome)
+    nome_sem_acentos = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    
+    return nome_sem_acentos.lower().replace(" ", "_").replace("-", "_")
+
+
+
 def login_usuario(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -55,7 +67,7 @@ def selecionar_conta(request):
         return redirect('dashboard_cliente')
     return render(request, 'core/selecionar_conta.html')
 
-# --- VIEWS DO NUTRICIONISTA (sem alterações) ---
+
 @login_required
 def cadastro_nutricionista(request):
     if request.method == 'POST':
@@ -84,7 +96,7 @@ def dashboard_nutricionista(request):
 @login_required
 def cadastro_cliente_perfil(request):
     if request.method == 'POST':
-        form = ClienteProfileForm(request.POST) 
+        form = ClienteProfileForm(request.POST, request.FILES)
         if form.is_valid():
             cliente, created = Cliente.objects.update_or_create( usuario=request.user, defaults=form.cleaned_data )
             user = request.user; user.user_type = User.UserType.CLIENTE; user.save()
@@ -100,12 +112,16 @@ def dashboard_cliente(request):
         return redirect('cadastro_cliente_perfil')
     proxima_consulta = Consulta.objects.filter( cliente=cliente, data_horario__gte=timezone.now(), status=Consulta.StatusChoices.CONFIRMADO ).order_by('data_horario').first()
     plano_atual = PlanoAlimentar.objects.filter( cliente=cliente ).order_by('-data_criacao').first()
+    
     refeicoes_dict = {}
     if plano_atual:
         refeicoes = plano_atual.refeicoes.all()
         for refeicao in refeicoes:
-            chave = refeicao.nome.lower().replace(" ", "_").replace("ç", "c").replace("ã", "a")
+            # --- MUDANÇA AQUI: Usa a nova função de normalização ---
+            chave = normalizar_nome_refeicao(refeicao.nome)
             refeicoes_dict[chave] = refeicao
+            # --- FIM DA MUDANÇA ---
+            
     form_update = ClienteProfileUpdateForm(instance=cliente)
     context = { 'cliente': cliente, 'proxima_consulta': proxima_consulta, 'plano_atual': plano_atual, 'refeicoes': refeicoes_dict, 'form_update': form_update }
     return render(request, 'core/dashboard_cliente.html', context)
@@ -151,97 +167,74 @@ def encontrar_nutricionista(request):
     context = { 'nutricionistas': nutricionistas, 'especialidades': especialidades, 'filtro_atual': int(especialidade_id) if especialidade_id else None }
     return render(request, 'core/encontrar_nutricionista.html', context)
 
-
-# --- MUDANÇA NESSA VIEW ---
 @login_required
 def agendar_consulta(request, nutri_id):
     nutricionista = get_object_or_404(Nutricionista, id=nutri_id, is_approved=True)
     cliente = request.user.perfil_cliente
-
     if request.method == 'POST':
         form = ConsultaForm(request.POST)
         if form.is_valid():
             try:
-                consulta = form.save(commit=False)
-                consulta.cliente = cliente
-                consulta.nutricionista = nutricionista
+                consulta = form.save(commit=False); consulta.cliente = cliente; consulta.nutricionista = nutricionista
                 consulta.data_horario = form.cleaned_data['data_horario_selecionado']
-                consulta.status = Consulta.StatusChoices.CONFIRMADO
-                consulta.save() 
+                consulta.status = Consulta.StatusChoices.CONFIRMADO; consulta.save() 
                 return redirect('consultas_cliente')
             except IntegrityError:
                 form.add_error(None, "Desculpe, este horário acabou de ser agendado. Por favor, escolha outro.")
-    else: 
-        form = ConsultaForm()
-
-    context = {
-        'nutricionista': nutricionista,
-        'form': form,
-        'today': timezone.now()  # <-- ADICIONA "HOJE" AO CONTEXTO
-    }
+    else: form = ConsultaForm()
+    context = { 'nutricionista': nutricionista, 'form': form, 'today': timezone.now() }
     return render(request, 'core/agendar_consulta.html', context)
-# --- FIM DA MUDANÇA ---
-
 
 @login_required
 def api_horarios_disponiveis(request):
-    nutricionista_id = request.GET.get('nutri_id')
-    data_selecionada_str = request.GET.get('data') 
-    
+    nutricionista_id = request.GET.get('nutri_id'); data_selecionada_str = request.GET.get('data') 
     if not nutricionista_id or not data_selecionada_str:
         return JsonResponse({'error': 'Faltando parâmetros'}, status=400)
-
     try:
         nutri = Nutricionista.objects.get(id=nutricionista_id)
         data_selecionada = datetime.strptime(data_selecionada_str, '%Y-%m-%d').date()
-        
-        dia_semana_num = data_selecionada.weekday()
-        dias_map = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']
-        dia_semana_str = dias_map[dia_semana_num]
-
+        dia_semana_num = data_selecionada.weekday(); dias_map = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']; dia_semana_str = dias_map[dia_semana_num]
         horarios_dia = nutri.horarios_disponiveis.get(dia_semana_str)
         if not horarios_dia or not horarios_dia.get('inicio') or not horarios_dia.get('fim'):
             return JsonResponse({'horarios': []}) 
-
-        inicio_str = horarios_dia['inicio']; fim_str = horarios_dia['fim']
-        duracao = nutri.duracao_consulta
-        hora_inicio = datetime.strptime(inicio_str, '%H:%M').time()
-        hora_fim = datetime.strptime(fim_str, '%H:%M').time()
-
-        consultas_marcadas = Consulta.objects.filter(
-            nutricionista=nutri,
-            data_horario__date=data_selecionada,
-            status=Consulta.StatusChoices.CONFIRMADO
-        ).values_list('data_horario', flat=True)
-        
+        inicio_str = horarios_dia['inicio']; fim_str = horarios_dia['fim']; duracao = nutri.duracao_consulta
+        hora_inicio = datetime.strptime(inicio_str, '%H:%M').time(); hora_fim = datetime.strptime(fim_str, '%H:%M').time()
+        consultas_marcadas = Consulta.objects.filter( nutricionista=nutri, data_horario__date=data_selecionada, status=Consulta.StatusChoices.CONFIRMADO ).values_list('data_horario', flat=True)
         horarios_ocupados = {consulta.time() for consulta in consultas_marcadas}
-
-        horarios_disponiveis = []
-        hora_atual = datetime.combine(data_selecionada, hora_inicio)
-        hora_fim_dt = datetime.combine(data_selecionada, hora_fim)
-        
-        # Garante que só mostre horários no futuro (a partir de agora)
+        horarios_disponiveis = []; hora_atual = datetime.combine(data_selecionada, hora_inicio); hora_fim_dt = datetime.combine(data_selecionada, hora_fim)
         agora = timezone.now()
-        
         while hora_atual < hora_fim_dt:
-            # Converte hora_atual para o timezone correto antes de comparar
             hora_atual_com_tz = timezone.make_aware(hora_atual, timezone.get_default_timezone())
-
             if hora_atual.time() not in horarios_ocupados and hora_atual_com_tz > agora:
-                horarios_disponiveis.append({
-                    'display': hora_atual.strftime('%H:%M'), 
-                    'valor_iso': hora_atual.isoformat() 
-                })
+                horarios_disponiveis.append({ 'display': hora_atual.strftime('%H:%M'), 'valor_iso': hora_atual.isoformat() })
             hora_atual += timedelta(minutes=duracao)
-
         return JsonResponse({'horarios': horarios_disponiveis})
-
     except Nutricionista.DoesNotExist:
         return JsonResponse({'error': 'Nutricionista não encontrado'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 @login_required
 def planos_alimentares_cliente(request):
-    return redirect('dashboard_cliente')
+    try:
+        cliente = request.user.perfil_cliente
+    except Cliente.DoesNotExist:
+        return redirect('cadastro_cliente_perfil')
+
+    plano_atual = PlanoAlimentar.objects.filter(
+        cliente=cliente
+    ).order_by('-data_criacao').first()
+    
+    refeicoes = []
+    if plano_atual:
+        refeicoes = plano_atual.refeicoes.all().order_by('id') 
+
+    form_update = ClienteProfileUpdateForm(instance=cliente)
+
+    context = {
+        'plano_atual': plano_atual,
+        'refeicoes': refeicoes, 
+        'form_update': form_update,
+    }
+    
+    return render(request, 'core/planos_alimentares_cliente.html', context)
