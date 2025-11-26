@@ -1,0 +1,264 @@
+{% extends 'core/base_nutricionista.html' %}
+{% load static %}
+
+{% block title %}Meus Clientes - {{ block.super }}{% endblock %}
+
+{% block header_title %}Meus Clientes{% endblock %}
+
+{% block extrastyles %}
+<style>
+    /* ... Mantenha todo o seu CSS igualzinho estava ... */
+    .card-custom {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background-color: white;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-custom:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+    .client-card-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 3px solid #f7f9f2;
+    }
+    .btn-detalhes {
+        background-color: #8A9A5B;
+        color: white;
+        border-radius: 24px;
+        padding: 8px 20px;
+        font-weight: 500;
+    }
+    .btn-detalhes:hover {
+        background-color: #7A8A4C;
+        color: white;
+    }
+    .filter-bar {
+        background-color: white;
+        border-radius: 24px;
+        padding: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Estilos do Modal */
+    .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
+    .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+    .modal-body label { font-weight: 500; margin-bottom: 0.3rem; font-size: 0.9rem; }
+    .modal-footer { border-top: none; }
+    .btn-fechar-detalhes { background-color: #6c757d; color:white; border-radius: 24px; padding: 8px 20px; }
+
+    .detail-item { margin-bottom: 1rem; }
+    .detail-item strong {
+        color: #6c757d;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: block;
+    }
+    .detail-item span {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #333;
+    }
+    .modal-client-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #eee;
+    }
+    .consulta-lista-item {
+        font-size: 0.9rem;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .consulta-lista-item:last-child {
+        border-bottom: none;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="filter-bar mb-4">
+    <form method="GET" action="{% url 'meus_clientes' %}">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <label for="nome_cliente" class="form-label visually-hidden">Nome do Cliente</label>
+                <input type="text" name="nome_cliente" id="nome_cliente" class="form-control" 
+                       placeholder="Pesquisar por nome..." value="{{ search_query|default:'' }}" 
+                       style="border-radius: 24px;">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-detalhes w-100">Pesquisar</button>
+            </div>
+            {% if search_query %}
+            <div class="col-md-2">
+                <a href="{% url 'meus_clientes' %}" class="btn btn-outline-secondary w-100" style="border-radius: 24px;">Limpar</a>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="row g-4">
+    {% for cliente in clientes %}
+    <div class="col-md-12">
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    
+                    {% if cliente.foto_perfil %}
+                    <img src="{{ cliente.foto_perfil.url }}" alt="Foto" class="client-card-img me-3">
+                    {% else %}
+                    <img src="{% static 'core/images/placeholder_cliente.png' %}" alt="Foto" class="client-card-img me-3">
+                    {% endif %}
+                    
+                    <div class="flex-grow-1">
+                        <h5 class="fw-bold mb-1">{{ cliente.usuario.get_full_name }}</h5>
+                        <p class="text-muted mb-1">
+                            {% if cliente.objetivos %}
+                                Objetivo: {{ cliente.objetivos|truncatewords:10 }}
+                            {% else %}
+                                Email: {{ cliente.usuario.email }}
+                            {% endif %}
+                        </p>
+                        <span class="text-muted small">Telefone: {{ cliente.usuario.telefone }}</span>
+                    </div>
+                    
+                    <a href="{% url 'api_cliente_detalhes' cliente.id %}" 
+                       class="btn btn-detalhes btn-ver-detalhes-ajax" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#clienteDetalhesModal">
+                        Ver detalhes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <p class="text-center text-muted">Nenhum cliente encontrado.</p>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="clienteDetalhesModal" tabindex="-1" aria-labelledby="clienteDetalhesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 24px;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="clienteDetalhesModalLabel">Detalhes do Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        
+        <div class="text-center mb-3">
+            <img src="{% static 'core/images/placeholder_cliente.png' %}" id="modal-cliente-foto" class="modal-client-img" alt="Foto do Cliente">
+        </div>
+
+        <div class="detail-item text-center">
+            <h5 id="modal-cliente-nome" class="fw-bold">Carregando...</h5>
+        </div>
+        
+        <div class="detail-item">
+            <strong>Objetivos</strong>
+            <span id="modal-cliente-objetivos"></span>
+        </div>
+        
+        <div class="row">
+            <div class="col-4 detail-item">
+                <strong>Peso</strong>
+                <span id="modal-cliente-peso"></span>
+            </div>
+            <div class="col-4 detail-item">
+                <strong>Altura</strong>
+                <span id="modal-cliente-altura"></span>
+            </div>
+            <div class="col-4 detail-item">
+                <strong>Idade</strong>
+                <span id="modal-cliente-idade"></span>
+            </div>
+        </div>
+        
+        <hr>
+
+        <div class="detail-item">
+            <strong>Próximas Consultas</strong>
+            <div id="modal-consulta-lista">
+                </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-fechar-detalhes" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extrascripts %}
+<script>
+$(document).ready(function() {
+    var clienteModal = document.getElementById('clienteDetalhesModal');
+    
+    clienteModal.addEventListener('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Botão que acionou o modal
+        var apiUrl = button.attr('href'); // Pega a URL da API do href do botão
+
+        var modal = $(this);
+        
+        // Limpa o modal enquanto carrega
+        modal.find('#modal-cliente-nome').text('Carregando...');
+        modal.find('#modal-cliente-objetivos').text('-');
+        modal.find('#modal-cliente-peso').text('-');
+        modal.find('#modal-cliente-altura').text('-');
+        modal.find('#modal-cliente-idade').text('-');
+        modal.find('#modal-cliente-foto').attr('src', '{% static "core/images/placeholder_cliente.png" %}');
+        modal.find('#modal-consulta-lista').html('<p class="text-muted small">Carregando...</p>');
+
+        // Faz a chamada AJAX para buscar os dados
+        $.ajax({
+            url: apiUrl,
+            type: 'GET',
+            success: function(data) {
+                // Preenche o modal com os dados do cliente
+                modal.find('#modal-cliente-nome').text(data.nome);
+                modal.find('#modal-cliente-objetivos').text(data.objetivos);
+                modal.find('#modal-cliente-peso').text(data.peso);
+                modal.find('#modal-cliente-altura').text(data.altura);
+                modal.find('#modal-cliente-idade').text(data.idade); 
+                modal.find('#modal-cliente-foto').attr('src', data.foto_url);
+                
+                // Preenche a lista de consultas
+                var consultaListaHtml = '';
+                if (data.consultas && data.consultas.length > 0) {
+                    data.consultas.forEach(function(consulta) {
+                        consultaListaHtml += `
+                            <div class="consulta-lista-item">
+                                <strong>${consulta.data} às ${consulta.hora}</strong><br>
+                                <span class"text-muted">${consulta.modalidade} - ${consulta.status}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    consultaListaHtml = '<p class="text-muted small">Nenhuma consulta futura agendada.</p>';
+                }
+                modal.find('#modal-consulta-lista').html(consultaListaHtml);
+            },
+            error: function(xhr, status, error) {
+                console.error("Erro ao buscar detalhes do cliente:", error);
+                modal.find('#modal-cliente-nome').text('Erro ao carregar');
+                modal.find('#modal-consulta-lista').html('<p class="text-danger small">Não foi possível carregar os detalhes.</p>');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
