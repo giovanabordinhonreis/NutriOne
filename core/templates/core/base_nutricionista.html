@@ -1,0 +1,843 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NutriOne{% endblock %}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Nunito:wght@400;700&am…" rel="stylesheet">
+
+    <style>
+        /* --- ESTE É O CSS PADRÃO (COPIADO DO BASE_CLIENTE) --- */
+        :root {
+            --verde-salvia: #8A9A5B;
+            --verde-escuro: #7A8A4C;
+            --bege-claro-fundo: #FAF8F0;
+            --cinza-texto: #36454F;
+            --branco: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5F5F5;
+        }
+        .main-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 88px;
+            background-color: #8A9A5B;
+            color: white;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100%;
+            transition: width 0.3s ease, padding 0.3s ease;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .sidebar:hover {
+            width: 260px;
+            padding: 20px;
+        }
+
+        .sidebar-logo-placeholder {
+            height: 50px;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--branco);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+            margin: 0;
+            padding-left: 3px;
+        }
+        .sidebar:hover .logo {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            width: 100%;
+        }
+        .nav-item {
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            padding: 12px 15px;
+            border-radius: 24px;
+            color: white;
+        }
+        
+        .nav-link i {
+            font-size: 1.3rem;
+            margin-right: 15px;
+            min-width: 34px;
+            text-align: center;
+        }
+        
+        .nav-link span {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar:hover .nav-link span {
+            opacity: 1;
+        }
+
+        .nav-link:hover {
+            background-color: #7A8A4C;
+        }
+        .nav-link.active {
+            background-color: white;
+            color: #7A8A4C;
+            font-weight: 600;
+        }
+        .nav-link.active i {
+             color: #7A8A4C;
+        }
+
+        .sidebar-profile {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            border-radius: 24px;
+            background-color: rgba(255, 255, 255, 0.1);
+            width: 100%;
+            overflow: hidden;
+        }
+        .sidebar:hover .sidebar-profile {
+            justify-content: flex-start;
+            padding: 10px;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #F5DEB3;
+            color: #7A8A4C;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 0;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Adicione isso ao seu bloco de style */
+
+/* Área da Foto de Perfil no Modal */
+.profile-upload-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 20px auto;
+    cursor: pointer;
+}
+
+.profile-upload-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.profile-upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(138, 154, 91, 0.7); /* Verde Sálvia com transparência */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 2rem;
+}
+
+.profile-upload-container:hover .profile-upload-overlay {
+    opacity: 1;
+}
+
+.profile-upload-container:hover .profile-upload-preview {
+    filter: brightness(0.8);
+}
+
+/* Estilização dos Horários */
+.schedule-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.schedule-item {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.schedule-item:hover {
+    border-color: var(--verde-salvia);
+    background-color: #fafbf7;
+}
+
+.schedule-item.inactive {
+    opacity: 0.6;
+    background-color: #f9f9f9;
+}
+
+.schedule-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--cinza-texto);
+    min-width: 140px;
+}
+
+.schedule-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Ajustes finos nos inputs do Django */
+.schedule-inputs input[type="time"] {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 4px 8px;
+    color: var(--cinza-texto);
+    background-color: #fff;
+    width: 100px;
+}
+
+/* Scrollbar personalizada */
+.schedule-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.schedule-grid::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+        
+        .sidebar:hover .profile-pic {
+            margin-right: 10px;
+        }
+
+        .profile-info {
+            line-height: 1.2;
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+            transition: opacity 0.2s ease, width 0.2s ease;
+        }
+        .sidebar:hover .profile-info {
+            opacity: 1;
+            width: auto;
+            flex-grow: 1;
+        }
+        .profile-info strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+        .profile-info span {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .logout-icon {
+            color: white;
+            opacity: 0.7;
+            text-decoration: none;
+            font-size: 1.3rem;
+            padding: 5px;
+            margin-left: 0;
+            transition: opacity 0.3s ease, margin 0.3s ease;
+            display: block;
+        }
+         .sidebar:hover .logout-icon {
+            margin-left: auto;
+        }
+        .logout-icon:hover {
+            opacity: 1;
+        }
+        
+        .main-content {
+            margin-left: 88px;
+            width: calc(100% - 88px);
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+        }
+        .sidebar:hover ~ .main-content {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+        }
+        
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .main-header h2 { font-weight: 600; color: var(--cinza-texto); }
+        .btn-novo-agendamento {
+            background-color: var(--verde-salvia);
+            color: var(--branco);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-weight: 500;
+        }
+        .btn-novo-agendamento:hover { background-color: var(--verde-escuro); color: var(--branco); }
+        
+        .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
+        .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        .modal-body label { font-weight: 500; margin-bottom: 0.3rem; font-size: 0.9rem; }
+        .modal-footer { border-top: none; }
+        .btn-salvar-perfil { background-color: #7A8A4C; color: white; border-radius: 24px; padding: 10px 20px; }
+        .btn-salvar-perfil:hover { background-color: #5f6f3a; }
+        .btn-cancelar-perfil { border-radius: 24px; padding: 10px 20px; }
+        #imagePreviewContainer { margin-top: 1rem; text-align: center; }
+        #imagePreview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%; 
+            margin-top: 0.5rem; 
+            object-fit: cover;
+            border: 2px solid #eee; 
+        }
+        .form-control, .form-select { border-radius: 24px; }
+        
+        .schedule-row-modal {
+            display: grid;
+            grid-template-columns: 150px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 24px;
+        }
+        .schedule-row-modal .form-check-label {
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .schedule-row-modal .input-group-text {
+            border-radius: 24px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+    </style>
+    
+    {% block extrastyles %}{% endblock %}
+</head>
+<body>
+    <div class="main-wrapper">
+        <nav class="sidebar">
+            
+            <div class="sidebar-logo-placeholder">
+                 <h3 class="logo">NutriOne</h3>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="{% url 'dashboard_nutri' %}" class="nav-link {% if request.resolver_match.view_name == 'dashboard_nutri' or request.resolver_match.view_name == 'dashboard_nutri_date' %}active{% endif %}">
+                        <i class="bi bi-house-door-fill"></i> <span>Início</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'meus_clientes' %}" class="nav-link {% if request.resolver_match.url_name == 'meus_clientes' %}active{% endif %}">
+                        <i class="bi bi-people-fill"></i> <span>Meus Clientes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'perfil_nutricionista' %}" id="editProfileLink" class="nav-link {% if request.resolver_match.url_name == 'perfil_nutricionista' %}active{% endif %}">
+                        <i class="bi bi-person-fill"></i> <span>Meu Perfil</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-profile">
+                <div class="profile-pic">
+                    {% if request.user.perfil_nutricionista.foto_perfil %}
+                        <img id="sidebarProfilePic" src="{{ request.user.perfil_nutricionista.foto_perfil.url }}" alt="Foto Perfil">
+                    {% else %}
+                        <span id="sidebarProfileInitial">{{ request.user.first_name|first|upper }}</span>
+                        <img id="sidebarProfilePic" src="" alt="Foto Perfil" style="display: none;">
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <strong>{{ request.user.get_full_name }}</strong>
+                    <span>Nutricionista</span>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-icon" title="Sair">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h2>
+                    {% block header_title %}{% endblock %}
+                </h2>
+                <a href="#" class="btn btn-novo-agendamento">+ Novo agendamento</a>
+            </header>
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <div class="modal fade" id="profileEditModal" tabindex="-1" aria-labelledby="profileEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 24px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="border-radius: 24px 24px 0 0;">
+                <h5 class="modal-title fw-bold" id="profileEditModalLabel">
+                    <i class="bi bi-person-gear me-2"></i>Editar Perfil Profissional
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <form id="profileEditForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="text-center mb-4">
+                        <label for="id_foto_perfil" class="profile-upload-container" title="Clique para alterar a foto">
+                            <img id="imagePreview" src="{% if request.user.perfil_nutricionista.foto_perfil %}{{ request.user.perfil_nutricionista.foto_perfil.url }}{% else %}#{% endif %}" 
+                                 class="profile-upload-preview" 
+                                 onerror="this.src='https://via.placeholder.com/150?text=Foto'" alt="Preview">
+                            
+                            <div class="profile-upload-overlay">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
+                        </label>
+                        <div class="d-none">
+                            {{ form_update_nutri.foto_perfil }}
+                        </div>
+                        <p class="text-muted small">Clique na imagem para alterar</p>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Especialidades</label>
+                            {{ form_update_nutri.especialidades }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Preço da Consulta (R$)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0" style="border-radius: 24px 0 0 24px;">R$</span>
+                                {{ form_update_nutri.preco_consulta }} 
+                                </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Duração (minutos)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0" style="border-radius: 24px 0 0 24px;"><i class="bi bi-clock"></i></span>
+                                {{ form_update_nutri.duracao_consulta }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3 pb-2 border-bottom text-primary-emphasis">Disponibilidade de Agenda</h6>
+                    
+                    <div class="schedule-grid">
+                       <div class="schedule-grid">
+    
+    <div class="schedule-item" id="row_segunda">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.segunda_ativo }}
+            </div>
+            <span>Segunda-feira</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.segunda_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.segunda_fim }}
+        </div>
+    </div>
+
+    <div class="schedule-item" id="row_terca">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.terca_ativo }}
+            </div>
+            <span>Terça-feira</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.terca_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.terca_fim }}
+        </div>
+    </div>
+
+    <div class="schedule-item" id="row_quarta">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.quarta_ativo }}
+            </div>
+            <span>Quarta-feira</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.quarta_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.quarta_fim }}
+        </div>
+    </div>
+
+    <div class="schedule-item" id="row_quinta">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.quinta_ativo }}
+            </div>
+            <span>Quinta-feira</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.quinta_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.quinta_fim }}
+        </div>
+    </div>
+
+    <div class="schedule-item" id="row_sexta">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.sexta_ativo }}
+            </div>
+            <span>Sexta-feira</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.sexta_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.sexta_fim }}
+        </div>
+    </div>
+
+    <div class="schedule-item" id="row_sabado">
+        <div class="schedule-label">
+            <div class="form-check form-switch">
+                {{ form_update_nutri.sabado_ativo }}
+            </div>
+            <span>Sábado</span>
+        </div>
+        <div class="schedule-inputs">
+            {{ form_update_nutri.sabado_inicio }}
+            <span class="text-muted mx-1">-</span>
+            {{ form_update_nutri.sabado_fim }}
+        </div>
+            </div>
+            </div>
+
+                        <div class="schedule-item" id="row_segunda">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.segunda_ativo }}
+                                </div>
+                                <span>Segunda-feira</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.segunda_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.segunda_fim }}
+                            </div>
+                        </div>
+
+                        <div class="schedule-item" id="row_terca">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.terca_ativo }}
+                                </div>
+                                <span>Terça-feira</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.terca_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.terca_fim }}
+                            </div>
+                        </div>
+
+                        <div class="schedule-item" id="row_quarta">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.quarta_ativo }}
+                                </div>
+                                <span>Quarta-feira</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.quarta_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.quarta_fim }}
+                            </div>
+                        </div>
+
+                        <div class="schedule-item" id="row_quinta">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.quinta_ativo }}
+                                </div>
+                                <span>Quinta-feira</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.quinta_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.quinta_fim }}
+                            </div>
+                        </div>
+
+                        <div class="schedule-item" id="row_sexta">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.sexta_ativo }}
+                                </div>
+                                <span>Sexta-feira</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.sexta_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.sexta_fim }}
+                            </div>
+                        </div>
+
+                        <div class="schedule-item" id="row_sabado">
+                            <div class="schedule-label">
+                                <div class="form-check form-switch">
+                                    {{ form_update_nutri.sabado_ativo }}
+                                </div>
+                                <span>Sábado</span>
+                            </div>
+                            <div class="schedule-inputs">
+                                {{ form_update_nutri.sabado_inicio }}
+                                <span class="text-muted mx-1">-</span>
+                                {{ form_update_nutri.sabado_fim }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="profileFormFeedback" class="mt-3"></div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light" style="border-radius: 0 0 24px 24px;">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="saveProfileButton" class="btn btn-success rounded-pill px-4" style="background-color: var(--verde-salvia); border: none;">
+                    <i class="bi bi-check-lg me-2"></i>Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        
+        // Variáveis globais do escopo
+        const imagePreview = $('#imagePreview');
+        const imageInput = $('#id_foto_perfil');
+        const feedbackDiv = $('#profileFormFeedback');
+        const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
+        // Função para controlar visualmente as linhas de horário (Ativo/Inativo)
+        function toggleScheduleRow(dia) {
+            const isChecked = $(`#id_${dia}_ativo`).is(':checked');
+            const row = $(`#row_${dia}`);
+            const inputs = row.find('input[type="time"]');
+            
+            if (isChecked) {
+                row.removeClass('inactive');
+                inputs.prop('disabled', false);
+            } else {
+                row.addClass('inactive');
+                inputs.prop('disabled', true).val(''); // Limpa valor se desativar
+            }
+        }
+
+        // Escuta mudanças nos switches de dia
+        dias.forEach(dia => {
+            $(document).on('change', `#id_${dia}_ativo`, function() {
+                toggleScheduleRow(dia);
+            });
+        });
+
+        // Preview da Imagem
+        imageInput.on('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.attr('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // ABRIR O MODAL (Carregar dados via AJAX)
+        $('#editProfileLink').on('click', function(e) {
+            e.preventDefault();
+            const url = $(this).attr('href');
+            
+            // Feedback visual de carregamento
+            const btn = $(this);
+            const originalContent = btn.html();
+            btn.html('<div class="spinner-border spinner-border-sm" role="status"></div> Carregando...');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                    // Preenche campos simples
+                    $('#id_preco_consulta').val(data.preco_consulta);
+                    $('#id_duracao_consulta').val(data.duracao_consulta);
+                    $('#id_especialidades').val(data.especialidades);
+                    
+                    // Preenche imagem se existir, senão usa placeholder
+                    if (data.foto_url) {
+                        imagePreview.attr('src', data.foto_url);
+                    }
+                    
+                    // Preenche horários
+                    dias.forEach(function(dia) {
+                        const horarioDia = data.horarios[dia];
+                        const checkField = $(`#id_${dia}_ativo`);
+                        const inicioField = $(`#id_${dia}_inicio`);
+                        const fimField = $(`#id_${dia}_fim`);
+                        
+                        if (horarioDia && horarioDia.ativo) { // Supondo que o back retorne flag ativo ou verifica se tem dados
+                            checkField.prop('checked', true);
+                            inicioField.val(horarioDia.inicio);
+                            fimField.val(horarioDia.fim);
+                        } else if (horarioDia) {
+                             checkField.prop('checked', true); // Se veio dados, ativa
+                             inicioField.val(horarioDia.inicio);
+                             fimField.val(horarioDia.fim);
+                        } else {
+                            checkField.prop('checked', false);
+                            inicioField.val('');
+                            fimField.val('');
+                        }
+                        // Atualiza visual da linha
+                        toggleScheduleRow(dia);
+                    });
+
+                    // Abre o modal
+                    const modalEl = document.getElementById('profileEditModal');
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                },
+                error: function() {
+                    alert('Erro ao carregar dados. Tente novamente.');
+                },
+                complete: function() {
+                    btn.html(originalContent); // Restaura botão
+                }
+            });
+        });
+
+        // SALVAR (Submit via AJAX)
+        $('#saveProfileButton').on('click', function() {
+            feedbackDiv.html(''); // Limpa erros anteriores
+            const btn = $(this);
+            const form = $('#profileEditForm')[0];
+            const formData = new FormData(form);
+            
+            btn.prop('disabled', true).html('<div class="spinner-border spinner-border-sm"></div> Salvando...');
+
+            $.ajax({
+                url: "{% url 'perfil_nutricionista' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                success: function(data) {
+                    if (data.success) {
+                        feedbackDiv.html('<div class="alert alert-success rounded-pill text-center"><i class="bi bi-check-circle me-2"></i>Perfil atualizado com sucesso!</div>');
+                        
+                        // Atualiza foto na sidebar em tempo real
+                        if (data.foto_url) {
+                            $('#sidebarProfilePic').attr('src', data.foto_url).show();
+                            $('#sidebarProfileInitial').hide();
+                        }
+
+                        setTimeout(function() {
+                            bootstrap.Modal.getInstance(document.getElementById('profileEditModal')).hide();
+                            feedbackDiv.html('');
+                        }, 1500);
+                    } else {
+                        // Tratamento de erros do Django Form
+                        let errorList = '';
+                        for (const field in data.errors) {
+                            data.errors[field].forEach(error => {
+                                errorList += `<li>${error}</li>`;
+                            });
+                        }
+                        feedbackDiv.html(`<div class="alert alert-danger" style="border-radius: 24px;">Changes not saved: <ul class="mb-0">${errorList}</ul></div>`);
+                    }
+                },
+                error: function() {
+                    feedbackDiv.html('<div class="alert alert-danger">Erro de conexão. Tente novamente.</div>');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="bi bi-check-lg me-2"></i>Salvar Alterações');
+                }
+            });
+        });
+    });
+</script>
+    
+    {% block extrascripts %}{% endblock %}
+</body>
+</html>

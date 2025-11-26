@@ -176,16 +176,48 @@ class PlanoAlimentarForm(forms.ModelForm):
 
 class RefeicaoForm(forms.ModelForm):
     class Meta:
-        model = Refeicao
-        fields = ['nome', 'alimentos', 'quantidades', 'calorias']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: Café da Manhã'}),
-            'alimentos': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 2, 'placeholder': 'Ex: 1x Banana, 20g Aveia'}),
-            'quantidades': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 1 unidade, 2 colheres'}),
-            'calorias': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 350'}),
-        }
-        labels = { 'nome': 'Nome da Refeição', 'alimentos': 'Alimentos', 'quantidades': 'Quantidades', 'calorias': 'Calorias (kcal)', }
+        model = Consulta
+        fields = ['modalidade', 'data_horario_selecionado']
+class NutricionistaProfileUpdateForm(forms.ModelForm):
+    especialidades = forms.ModelChoiceField(
+        queryset=Especialidade.objects.all(),
+        label="Especialidades",
+        empty_label="Selecione sua principal especialidade",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
-RefeicaoFormSet = forms.inlineformset_factory(
-    PlanoAlimentar, Refeicao, form=RefeicaoForm, extra=6, min_num=1, can_delete=True
-)
+    class Meta:
+        model = Nutricionista
+        fields = ['foto_perfil', 'especialidades', 'preco_consulta', 'duracao_consulta']
+        widgets = {
+            'foto_perfil': forms.FileInput(attrs={'class': 'form-control'}),
+            'preco_consulta': forms.NumberInput(attrs={'class': 'form-control'}),
+            'duracao_consulta': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'foto_perfil': 'Foto de Perfil',
+            'preco_consulta': 'Preço por Consulta (R$)',
+            'duracao_consulta': 'Duração da Consulta (minutos)',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        dias_semana = [
+            ('segunda', 'Segunda-feira'), ('terca', 'Terça-feira'), ('quarta', 'Quarta-feira'),
+            ('quinta', 'Quinta-feira'), ('sexta', 'Sexta-feira'), ('sabado', 'Sábado'),
+        ]
+        
+        for dia_key, dia_label in dias_semana:
+            self.fields[f'{dia_key}_ativo'] = forms.BooleanField(
+                required=False, 
+                label=dia_label,
+                widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+            )
+            self.fields[f'{dia_key}_inicio'] = forms.TimeField(
+                required=False,
+                widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm'})
+            )
+            self.fields[f'{dia_key}_fim'] = forms.TimeField(
+                required=False,
+                widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm'})
+            )
