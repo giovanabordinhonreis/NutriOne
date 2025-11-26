@@ -1,6 +1,5 @@
 {% load static %}
-{# Não precisamos mais do crispy_forms_tags aqui #}
- 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,13 +10,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
- 
+
     <style>
         body, html {
             height: 100%;
             margin: 0;
             font-family: 'Poppins', sans-serif;
-            background-color: #8A9A5B;
+            background-color: #8A9A5B; 
         }
         .main-container {
             min-height: 100vh;
@@ -28,7 +27,7 @@
             padding-bottom: 2rem;
         }
         .form-card {
-            background-color: #7A8A4C;
+            background-color: #7A8A4C; 
             color: white;
             border-radius: 24px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -36,34 +35,18 @@
             width: 100%;
             padding: 40px;
         }
-        .form-card h2 {
-            font-weight: 600;
-        }
-        .form-card p {
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.85);
-        }
-       
-        .form-card label {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
+        .form-card h2 { font-weight: 600; }
+        .form-card p { font-size: 0.95rem; color: rgba(255, 255, 255, 0.85); }
+        .form-card label { font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem; }
         .form-control, .form-select {
             border-radius: 24px;
-            padding: 0.75rem 1rem;
             padding: 0.75rem 1rem;
             border: 1px solid #ccc;
             background-color: white; 
             color: #333;
         }
-        .form-control:focus, .form-select:focus {
-            box-shadow: none;
-            border-color: #8A9A5B;
-        }
-        .form-control::placeholder {
-            color: #aaa;
-        }
+        .form-control:focus, .form-select:focus { box-shadow: none; border-color: #8A9A5B; }
+        .form-control::placeholder { color: #aaa; }
         
         .btn-custom-ghost {
             background-color: transparent;
@@ -75,14 +58,25 @@
             font-weight: bold;
             transition: all 0.3s ease;
         }
-        .btn-custom-ghost:hover {
+        .btn-custom-ghost:hover { background-color: white; color: #7A8A4C; }
+        
+        /* Estilos para os Checkboxes (Igual ao Nutri) */
+        .objetivos-checkbox-container {
             background-color: white;
-            color: #7A8A4C;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 24px;
+            max-height: 200px;
+            overflow-y: auto;
         }
+        .form-check { padding-left: 2.2em; margin-bottom: 0.5rem; }
+        .form-check-label { font-weight: 400 !important; color: #333; }
+        .form-check-input { border-radius: .25em !important; border-color: #aaa; }
+        .form-check-input:checked { background-color: #8A9A5B; border-color: #8A9A5B; }
     </style>
 </head>
 <body>
- 
+
     <div class="container main-container">
         <div class="form-card">
             <div class="text-center">
@@ -95,10 +89,11 @@
                 
                 <div class="row text-start">
                     <div class="col-12 mb-3">
-                        <label for="{{ form.foto_perfil.id_for_label }}" class="form-label">{{ form.foto_perfil.label }}</label>
+                        <label class="form-label">{{ form.foto_perfil.label }}</label>
                         {{ form.foto_perfil }}
                     </div>
                 </div>
+
                 <div class="row text-start">
                     <div class="col-md-6 mb-3">
                         <label for="{{ form.peso.id_for_label }}" class="form-label">{{ form.peso.label }}</label>
@@ -110,13 +105,25 @@
                     </div>
                 </div>
                 <div class="row text-start">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 mb-3">
                         <label for="{{ form.idade.id_for_label }}" class="form-label">{{ form.idade.label }}</label>
                         {{ form.idade }}
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.objetivos.id_for_label }}" class="form-label">{{ form.objetivos.label }}</label>
-                        {{ form.objetivos }}
+                </div>
+
+                <div class="row text-start">
+                    <div class="col-12 mb-3">
+                        <label class="form-label">{{ form.objetivos.label }}</label>
+                        <div class="objetivos-checkbox-container">
+                            {% for choice in form.objetivos %}
+                            <div class="form-check">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
                 
@@ -124,7 +131,6 @@
             </form>
         </div>
     </div>
- 
+
 </body>
 </html>
- 
