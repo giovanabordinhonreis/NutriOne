@@ -4,6 +4,7 @@ from .models import User, Nutricionista, Especialidade, Cliente, Consulta, Plano
 import json
 
 
+
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
@@ -16,7 +17,7 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['email'].widget.attrs.update({'placeholder': 'E-mail'})
         self.fields['telefone'].widget.attrs.update({'placeholder': 'Telefone'})
         
-        
+
         if 'password1' in self.fields:
             self.fields['password1'].help_text = None
         if 'password2' in self.fields:
@@ -53,14 +54,14 @@ class ClienteProfileForm(forms.ModelForm):
         ('OUTRO', 'Outro'),
     ]
 
-    
+
     objetivos = forms.MultipleChoiceField(
         choices=OBJETIVO_CHOICES,
         label="Objetivos",
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
     )
     
-   
+
     foto_perfil = forms.ImageField(
         label="Foto de Perfil (Opcional)",
         required=False,
@@ -81,18 +82,17 @@ class ClienteProfileForm(forms.ModelForm):
             'idade': forms.NumberInput(attrs={'placeholder': '30', 'class': 'form-control'}),
         }
     
-
     def clean_objetivos(self):
+
         objetivos_lista = self.cleaned_data.get('objetivos')
         if objetivos_lista:
             return ", ".join(objetivos_lista)
         return ""
 
 class ClienteProfileUpdateForm(forms.ModelForm):
-    
     OBJETIVO_CHOICES = ClienteProfileForm.OBJETIVO_CHOICES 
     
-    objetivos = forms.MultipleChoiceField( 
+    objetivos = forms.MultipleChoiceField(
         choices=OBJETIVO_CHOICES,
         label="Objetivos",
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
@@ -112,11 +112,19 @@ class ClienteProfileUpdateForm(forms.ModelForm):
         return ""
 
 class ConsultaForm(forms.ModelForm):
-    modalidade = forms.ChoiceField( choices=Consulta.ModalidadeChoices.choices, widget=forms.RadioSelect(attrs={'class': 'form-check-input'}), label="Modalidade" )
-    data_horario_selecionado = forms.DateTimeField( widget=forms.HiddenInput(), required=True )
+    modalidade = forms.ChoiceField(
+        choices=Consulta.ModalidadeChoices.choices,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label="Modalidade"
+    )
+    data_horario_selecionado = forms.DateTimeField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
     class Meta:
         model = Consulta
-        fields = ['modalidade', 'data_horario_selecionado']
+        fields = ['modalidade'] 
 
 
 
@@ -176,48 +184,16 @@ class PlanoAlimentarForm(forms.ModelForm):
 
 class RefeicaoForm(forms.ModelForm):
     class Meta:
-        model = Consulta
-        fields = ['modalidade', 'data_horario_selecionado']
-class NutricionistaProfileUpdateForm(forms.ModelForm):
-    especialidades = forms.ModelChoiceField(
-        queryset=Especialidade.objects.all(),
-        label="Especialidades",
-        empty_label="Selecione sua principal especialidade",
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-
-    class Meta:
-        model = Nutricionista
-        fields = ['foto_perfil', 'especialidades', 'preco_consulta', 'duracao_consulta']
+        model = Refeicao
+        fields = ['nome', 'alimentos', 'quantidades', 'calorias']
         widgets = {
-            'foto_perfil': forms.FileInput(attrs={'class': 'form-control'}),
-            'preco_consulta': forms.NumberInput(attrs={'class': 'form-control'}),
-            'duracao_consulta': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: Café da Manhã'}),
+            'alimentos': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 2, 'placeholder': 'Ex: 1x Banana, 20g Aveia'}),
+            'quantidades': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 1 unidade, 2 colheres'}),
+            'calorias': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 350'}),
         }
-        labels = {
-            'foto_perfil': 'Foto de Perfil',
-            'preco_consulta': 'Preço por Consulta (R$)',
-            'duracao_consulta': 'Duração da Consulta (minutos)',
-        }
+        labels = { 'nome': 'Nome da Refeição', 'alimentos': 'Alimentos', 'quantidades': 'Quantidades', 'calorias': 'Calorias (kcal)', }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        dias_semana = [
-            ('segunda', 'Segunda-feira'), ('terca', 'Terça-feira'), ('quarta', 'Quarta-feira'),
-            ('quinta', 'Quinta-feira'), ('sexta', 'Sexta-feira'), ('sabado', 'Sábado'),
-        ]
-        
-        for dia_key, dia_label in dias_semana:
-            self.fields[f'{dia_key}_ativo'] = forms.BooleanField(
-                required=False, 
-                label=dia_label,
-                widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
-            )
-            self.fields[f'{dia_key}_inicio'] = forms.TimeField(
-                required=False,
-                widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm'})
-            )
-            self.fields[f'{dia_key}_fim'] = forms.TimeField(
-                required=False,
-                widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control form-control-sm'})
-            )
+RefeicaoFormSet = forms.inlineformset_factory(
+    PlanoAlimentar, Refeicao, form=RefeicaoForm, extra=6, min_num=1, can_delete=True
+)
