@@ -1,8 +1,8 @@
 {% extends 'core/base_cliente.html' %}
 {% load static %}
- 
+
 {% block title %}Meus Agendamentos - {{ block.super }}{% endblock %}
- 
+
 {% block extrastyles %}
 <style>
     .card-custom {
@@ -69,10 +69,10 @@
     }
 </style>
 {% endblock %}
- 
+
 {% block content %}
 <h2 class="h4 fw-bold mb-4">Meus Agendamentos</h2>
- 
+
 <div class="card card-custom mb-4">
     <div class="card-body p-3">
         <h5 class="card-title fw-bold p-3 mb-0">Próximas Consultas</h5>
@@ -92,10 +92,16 @@
                 <div class="consulta-status">
                     {% if consulta.status == 'CONFIRMADO' %}
                         <span class="badge bg-success-subtle text-success-emphasis badge-status">Confirmado</span>
-                    {% elif consulta.status == 'CANCELADO' %}
+                        
+                        <a href="{% url 'cancelar_consulta' consulta.id %}" 
+                           class="btn btn-outline-danger btn-sm ms-2" 
+                           style="border-radius: 24px;"
+                           onclick="return confirm('Tem certeza que deseja cancelar esta consulta?');">
+                           Cancelar
+                        </a>
+                        {% elif consulta.status == 'CANCELADO' %}
                          <span class="badge bg-danger-subtle text-danger-emphasis badge-status">Cancelado</span>
                     {% endif %}
-                    <a href="#" class="btn btn-outline-danger btn-sm ms-2" style="border-radius: 24px;">Cancelar</a>
                 </div>
             </div>
             {% endfor %}
@@ -104,7 +110,7 @@
         {% endif %}
     </div>
 </div>
- 
+
 <div class="card card-custom">
     <div class="card-body p-3">
         <h5 class="card-title fw-bold p-3 mb-0">Consultas Passadas</h5>
@@ -122,7 +128,9 @@
                 </div>
                 <div class="consulta-status">
                      <span class="badge bg-secondary-subtle text-secondary-emphasis badge-status">{{ consulta.get_status_display }}</span>
-                     <a href="#" class="btn btn-outline-primary btn-sm ms-2" style="border-radius: 24px;">Ver Plano</a>
+                     
+                     <a href="{% url 'plano_por_nutricionista' consulta.nutricionista.id %}" class="btn btn-outline-primary btn-sm ms-2" style="border-radius: 24px;">Ver Plano</a>
+                     
                 </div>
             </div>
             {% endfor %}
@@ -131,6 +139,5 @@
         {% endif %}
     </div>
 </div>
- 
+
 {% endblock %}
- 
