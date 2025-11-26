@@ -19,6 +19,6 @@ urlpatterns = [
     path('cliente/planos/', views.planos_alimentares_cliente, name='planos_alimentares_cliente'),
     path('nutricionista/perfil/', views.perfil_nutricionista, name='perfil_nutricionista'),
     path('nutricionista/meus-clientes/', views.meus_clientes, name='meus_clientes'),
-    path('consulta/cancelar/<int:consulta_id>/', views.cancelar_consulta_nutri, name='cancelar_consulta_nutri'),
+    # path('consulta/cancelar/<int:consulta_id>/', views.cancelar_consulta_nutri, name='cancelar_consulta_nutri'),
     path('api/cliente-detalhes/<int:cliente_id>/', views.api_cliente_detalhes, name='api_cliente_detalhes'),
 ]

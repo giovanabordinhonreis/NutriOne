@@ -351,23 +351,28 @@ def api_horarios_disponiveis(request):
 
 @login_required
 def planos_alimentares_cliente(request):
-    return redirect('dashboard_cliente')
-
-@login_required
-@require_POST
-def cancelar_consulta_nutri(request, consulta_id):
     try:
-        nutri_profile = request.user.perfil_nutricionista
-    except Nutricionista.DoesNotExist:
-        return redirect('login') 
+        cliente = request.user.perfil_cliente
+    except Cliente.DoesNotExist:
+        return redirect('cadastro_cliente_perfil')
 
-    consulta = get_object_or_404(Consulta, id=consulta_id, nutricionista=nutri_profile)
+    plano_atual = PlanoAlimentar.objects.filter(
+        cliente=cliente
+    ).order_by('-data_criacao').first()
     
-    consulta.status = Consulta.StatusChoices.CANCELADO
-    consulta.save()
+    refeicoes = []
+    if plano_atual:
+        refeicoes = plano_atual.refeicoes.all().order_by('id') 
+
+    form_update = ClienteProfileUpdateForm(instance=cliente)
+
+    context = {
+        'plano_atual': plano_atual,
+        'refeicoes': refeicoes, 
+        'form_update': form_update,
+    }
     
-    data_str = consulta.data_horario.strftime('%Y-%m-%d')
-    return redirect('dashboard_nutri_date', date_str=data_str)
+    return render(request, 'core/planos_alimentares_cliente.html', context)
 
 @login_required
 def api_cliente_detalhes(request, cliente_id):
