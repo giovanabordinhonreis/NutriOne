@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro Cliente - NutriAgenda</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'core/images/logo2.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,8 +58,17 @@
             width: 100%;
             font-weight: bold;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .btn-custom-ghost:hover { background-color: white; color: #7A8A4C; }
+        .btn-custom-ghost:hover:not(:disabled) { 
+            background-color: white; 
+            color: #7A8A4C; 
+        }
+        .btn-custom-ghost:disabled {
+            border-color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.5);
+            cursor: not-allowed;
+        }
         
     
         .objetivos-checkbox-container {
@@ -84,13 +94,17 @@
                 <p class="mb-4">Para personalizar seus futuros planos alimentares, por favor, preencha suas informações de saúde abaixo.</p>
             </div>
             
-            <form method="post" novalidate enctype="multipart/form-data">
+            <form method="post" novalidate enctype="multipart/form-data" id="cadastroClienteForm">
                 {% csrf_token %}
                 
                 <div class="row text-start">
                     <div class="col-12 mb-3">
-                        <label class="form-label">{{ form.foto_perfil.label }}</label>
-                        {{ form.foto_perfil }}
+                        <label class="form-label">Foto de Perfil</label>
+                        {% if form.foto_perfil %}
+                            {{ form.foto_perfil }}
+                        {% else %}
+                            <input type="file" name="foto_perfil" class="form-control" accept="image/*">
+                        {% endif %}
                     </div>
                 </div>
 
@@ -127,10 +141,48 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-custom-ghost mt-4">Concluir Cadastro</button>
+                <button type="submit" id="btnConcluir" class="btn btn-custom-ghost mt-4" disabled>Concluir Cadastro</button>
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('cadastroClienteForm');
+            const btnConcluir = document.getElementById('btnConcluir');
+            const inputPeso = form.querySelector('input[name="peso"]');
+            const inputAltura = form.querySelector('input[name="altura"]');
+            const inputIdade = form.querySelector('input[name="idade"]');
+            const checkboxesObjetivos = form.querySelectorAll('input[name="objetivos"]');
+            
+            function validarFormulario() {
+                let pesoValido = inputPeso.value.trim() !== "";
+                let alturaValida = inputAltura.value.trim() !== "";
+                let idadeValida = inputIdade.value.trim() !== "";
+                
+                let objetivoSelecionado = false;
+                checkboxesObjetivos.forEach(cb => {
+                    if (cb.checked) objetivoSelecionado = true;
+                });
+
+                if (pesoValido && alturaValida && idadeValida && objetivoSelecionado) {
+                    btnConcluir.disabled = false;
+                } else {
+                    btnConcluir.disabled = true;
+                }
+            }
+
+            if(inputPeso) inputPeso.addEventListener('input', validarFormulario);
+            if(inputAltura) inputAltura.addEventListener('input', validarFormulario);
+            if(inputIdade) inputIdade.addEventListener('input', validarFormulario);
+            
+            checkboxesObjetivos.forEach(cb => {
+                cb.addEventListener('change', validarFormulario);
+            });
+
+            validarFormulario();
+        });
+    </script>
 
 </body>
 </html>

@@ -1,155 +1,231 @@
 {% extends 'core/base_nutricionista.html' %}
 {% load static %}
 
-{% block title %}Dashboard - {{ block.super }}{% endblock %}
+{% block title %}Minha Agenda - NutriOne{% endblock %}
 
 {% block header_title %}
-    Olá, {{ user.get_full_name|default:user.username }}!
+    Olá, {{ user.first_name }}!
 {% endblock %}
+
 {% block extrastyles %}
 <style>
-    .date-navigator {
+    .week-navigator-container {
+        background-color: white;
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+    .week-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--branco);
-        padding: 15px 20px;
-        border-radius: 24px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
     }
-    .date-navigator a {
-        color: var(--verde-salvia);
-        font-size: 1.5rem;
-        text-decoration: none;
-    }
-    .date-navigator a.disabled {
-        color: #ccc;
-        pointer-events: none;
-    }
-    .date-navigator span {
-        font-weight: 600;
+    
+    .week-title {
+        font-weight: 700;
         font-size: 1.1rem;
         color: var(--cinza-texto);
+        text-transform: capitalize;
     }
+
+    .week-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .day-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #F8F9FA;
+        border-radius: 18px;
+        padding: 15px 5px;
+        text-decoration: none;
+        color: #888;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        border: 2px solid transparent;
+        height: 90px;
+    }
+
+    .day-card:hover {
+        background-color: #E6F7EA;
+        transform: translateY(-2px);
+        color: var(--verde-escuro);
+    }
+
+    .day-card span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .day-card strong {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--cinza-texto);
+    }
+
+    .day-card.active {
+        background-color: var(--verde-salvia);
+        color: white !important;
+        box-shadow: 0 8px 20px rgba(138, 154, 91, 0.3);
+        border-color: var(--verde-salvia);
+    }
+    .day-card.active strong, 
+    .day-card.active span {
+        color: white;
+    }
+
+    .day-card.is-today:not(.active) {
+        border-color: var(--verde-salvia);
+        background-color: white;
+    }
+    .day-card.is-today:not(.active) strong {
+        color: var(--verde-salvia);
+    }
+
+    .has-task-dot {
+        width: 6px;
+        height: 6px;
+        background-color: #FF6B6B;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 12px;
+    }
+    .day-card.active .has-task-dot {
+        background-color: white;
+    }
+
+    .nav-arrow {
+        color: var(--verde-salvia);
+        font-size: 1.2rem;
+        padding: 5px 10px;
+        border-radius: 50%;
+        transition: background 0.2s;
+        text-decoration: none;
+    }
+    .nav-arrow:hover {
+        background-color: #f0f0f0;
+    }
+
+    .btn-voltar-hoje {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--verde-salvia);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-voltar-hoje:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+        .week-grid {
+            overflow-x: auto;
+            display: flex;
+            padding-bottom: 10px;
+        }
+        .day-card {
+            min-width: 65px;
+        }
+        .week-header {
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+    }
+
     .schedule-card {
         background-color: var(--branco);
         padding: 25px;
         border-radius: 24px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
-    .schedule-table thead th {
-        border-bottom: 2px solid #eee;
-        color: #6c757d;
-        font-weight: 500;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-    }
-    .schedule-table tbody td {
-        vertical-align: middle;
-        padding: 15px 10px;
-        border-bottom: 1px solid #f1f1f1;
-    }
-    .schedule-table tbody tr:last-child td { border-bottom: none; }
-    
-    .schedule-table tbody tr:hover {
-        background-color: #f8f9fa;
-        cursor: pointer;
-    }
-    
-    .client-info img { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; }
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: 24px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    .tag i { margin-right: 5px; }
+    .schedule-table thead th { border-bottom: 2px solid #eee; color: #6c757d; font-weight: 500; font-size: 0.85rem; text-transform: uppercase; }
+    .schedule-table tbody td { vertical-align: middle; padding: 15px 10px; border-bottom: 1px solid #f1f1f1; }
+    .schedule-table tbody tr:hover { background-color: #f8f9fa; cursor: pointer; }
+    .client-info img { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+    .tag { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 24px; font-size: 0.8rem; font-weight: 500; }
     .tag-online { background-color: #cfe2ff; color: #0d6efd; }
     .tag-presencial { background-color: #fff3cd; color: #664d03; }
     .tag-confirmado { background-color: #d1e7dd; color: #0f5132; }
     .tag-concluido { background-color: #e2e3e5; color: #41464b; }
     .tag-cancelado { background-color: #f8d7da; color: #842029; }
-    
     .no-appointments { text-align: center; padding: 50px 20px; color: #6c757d; }
-    
     .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
-    .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
-    .modal-body strong {
-        color: #6c757d;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: block;
-    }
-    .modal-body p {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 1rem;
-    }
-    .modal-footer { border-top: none; }
-    .btn-fechar {
-        background-color: #6c757d;
-        color: white;
-        border-radius: 24px;
-        padding: 8px 20px;
-    }
-    .btn-cancelar-consulta {
-        border-radius: 24px;
-        padding: 8px 20px;
-    }
-    .main-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-    .main-header h2 { font-weight: 600; color: var(--cinza-texto); }
-    .btn-novo-agendamento {
-        background-color: var(--verde-salvia);
-        color: var(--branco);
-        border: none;
-        padding: 10px 20px;
-        border-radius: 24px;
-        font-weight: 500;
-    }
-    .btn-novo-agendamento:hover { background-color: var(--verde-escuro); color: var(--branco); }
-
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="date-navigator">
-    <a href="{% url 'dashboard_nutri_date' previous_day_url %}" title="Dia Anterior">
-        <i class="bi bi-chevron-left"></i>
-    </a>
-    
-    <span>
-        {% if is_today %}
-            Hoje, {{ current_date|date:"d \d\e F \d\e Y" }}
-        {% else %}
-            {{ current_date|date:"l, d \d\e F \d\e Y" }}
-        {% endif %}
-    </span>
 
-    <a href="{% url 'dashboard_nutri_date' next_day_url %}" 
-       title="Próximo Dia" 
-       class="{% if next_day_disabled %}disabled{% endif %}">
-        <i class="bi bi-chevron-right"></i>
-    </a>
+<div class="week-navigator-container">
+    <div class="week-header">
+        <div>
+            <div class="week-title">{{ selected_date|date:"F Y" }}</div>
+            
+            {% if not is_today_view %}
+                <a href="{% url 'dashboard_nutri' %}" class="btn-voltar-hoje mt-1">
+                    <i class="bi bi-arrow-return-left"></i> Voltar para Hoje
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="d-flex align-items-center">
+            <a href="{% url 'dashboard_nutri_date' prev_week_url %}" class="nav-arrow me-2" title="Semana Anterior">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <span class="text-muted small">Semana</span>
+            <a href="{% url 'dashboard_nutri_date' next_week_url %}" class="nav-arrow ms-2" title="Próxima Semana">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="week-grid">
+        {% for dia in agenda_semanal %}
+            <a href="{% url 'dashboard_nutri_date' dia.url %}" 
+               class="day-card 
+                      {% if dia.is_selected %}active{% endif %} 
+                      {% if dia.is_today %}is-today{% endif %}">
+                
+                <span>{{ dia.data|date:"D" }}</span>
+                
+                <strong>{{ dia.dia_numero }}</strong>
+
+                {% if dia.tem_consultas %}
+                    <div class="has-task-dot"></div>
+                {% endif %}
+            </a>
+        {% endfor %}
+    </div>
 </div>
 
-<div class="schedule-card">
+<div class="schedule-card animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold m-0 text-secondary">
+            {% if is_today_view %}Agenda de Hoje{% else %}Agenda de {{ selected_date|date:"l, d \d\e F" }}{% endif %}
+        </h5>
+        <span class="badge bg-light text-dark border rounded-pill px-3">
+            {{ appointments|length }} agendamento(s)
+        </span>
+    </div>
+
     {% if appointments %}
         <table class="table schedule-table table-borderless align-middle">
             <thead>
                 <tr>
                     <th>Horário</th>
                     <th>Cliente</th>
+                    <th>Duração</th>
                     <th>Modalidade</th>
                     <th>Status</th>
                 </tr>
@@ -166,29 +242,37 @@
                     data-status-class="{{ app.status }}"
                     data-preco="R$ {{ app.nutricionista.preco_consulta }}"
                     data-cancelar-url="{% url 'cancelar_consulta_nutri' app.id %}"
-                    
                     data-peso="{{ app.cliente.peso|default:'-' }}"
                     data-altura="{{ app.cliente.altura|default:'-' }}"
-                    data-objetivos="{{ app.cliente.objetivos|default:'Não informado' }}"
-                >
-                    <td>{{ app.data_horario|date:"H:i" }} - {{ app.get_end_time|date:"H:i" }}</td>
+                    data-objetivos="{{ app.cliente.objetivos|default:'Não informado' }}">
+                    
                     <td>
-                        <div class="d-flex align-items: center client-info">
+                        <strong>{{ app.data_horario|date:"H:i" }}</strong>
+                    </td>
+                    
+                    <td>
+                        <div class="d-flex align-items-center client-info">
                             {% if app.cliente.foto_perfil %}
-                            <img src="{{ app.cliente.foto_perfil.url }}" alt="Foto Cliente">
+                            <img src="{{ app.cliente.foto_perfil.url }}" alt="Foto">
                             {% else %}
-                            <img src="{% static 'core/images/placeholder_cliente.png' %}" alt="Foto Cliente">
+                            <img src="{% static 'core/images/placeholder_cliente.png' %}" alt="Foto">
                             {% endif %}
-                            <span>{{ app.cliente.usuario.get_full_name|default:app.cliente.usuario.username }}</span>
+                            <span class="fw-bold text-dark">{{ app.cliente.usuario.get_full_name }}</span>
                         </div>
                     </td>
+
+                    <td class="text-muted small">
+                        <i class="bi bi-clock"></i> {{ app.duracao|default:app.nutricionista.duracao_consulta }} min
+                    </td>
+
                     <td>
                         {% if app.modalidade == 'ONLINE' %}
                             <span class="tag tag-online"><i class="bi bi-camera-video-fill"></i> Online</span>
-                        {% elif app.modalidade == 'PRESENCIAL' %}
+                        {% else %}
                             <span class="tag tag-presencial"><i class="bi bi-geo-alt-fill"></i> Presencial</span>
                         {% endif %}
                     </td>
+
                     <td>
                         {% if app.status == 'CONFIRMADO' %}
                             <span class="tag tag-confirmado">Confirmado</span>
@@ -203,56 +287,73 @@
             </tbody>
         </table>
     {% else %}
-        <p class="no-appointments">Você não possui agendamentos para este dia.</p>
+        <div class="no-appointments">
+            <i class="bi bi-calendar-x fs-1 mb-3 text-muted"></i>
+            <p class="fs-5">Nenhum agendamento para este dia.</p>
+            <small class="text-muted">Selecione outro dia na régua acima.</small>
+        </div>
     {% endif %}
 </div>
 
-<div class="modal fade" id="consultaDetalhesModal" tabindex="-1" aria-labelledby="consultaDetalhesModalLabel" aria-hidden="true">
+<div class="modal fade" id="consultaDetalhesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius: 24px;">
       <div class="modal-header">
-        <h5 class="modal-title" id="consultaDetalhesModalLabel">Detalhes da Consulta</h5>
+        <h5 class="modal-title">Detalhes da Consulta</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
         
-        <strong>Cliente:</strong>
-        <p class="modal-cliente-nome">Nome do Cliente Aqui</p>
+        <h5 class="modal-cliente-nome mb-3 fw-bold text-dark"></h5>
         
-        <strong>Data e Hora:</strong>
-        <p class="modal-data-hora">Data e Hora Aqui</p>
+        <div class="row mb-3">
+            <div class="col-6">
+                <small class="text-muted d-block">Horário</small>
+                <strong class="modal-data-hora"></strong>
+            </div>
+            <div class="col-6">
+                <small class="text-muted d-block">Valor</small>
+                <strong class="modal-preco text-success"></strong>
+            </div>
+        </div>
         
-        <strong>Modalidade:</strong>
-        <p class="modal-modalidade">Modalidade Aqui</p>
-        
-        <strong>Status:</strong>
-        <p><span class="badge badge-status modal-status">Status Aqui</span></p>
-        
-        <strong>Preço:</strong>
-        <p class="modal-preco">R$ 0,00</p>
+        <div class="mb-3">
+            <small class="text-muted d-block">Status</small>
+            <span class="badge rounded-pill bg-secondary modal-status fs-6 fw-normal px-3"></span>
+        </div>
         
         <hr>
-        <strong>Detalhes do Cliente:</strong>
-        <p class="modal-cliente-objetivos" style="font-size: 1rem; font-weight: 400;"></p>
+        <h6 class="fw-bold mb-3 text-secondary text-uppercase small">Ficha do Cliente</h6>
+        
+        <div class="mb-3">
+            <small class="text-muted">Objetivos</small>
+            <p class="modal-cliente-objetivos m-0 fw-bold"></p>
+        </div>
+
         <div class="row">
-            <div class="col-6"><strong>Peso:</strong> <p class="modal-cliente-peso" style="font-size: 1rem;"></p></div>
-            <div class="col-6"><strong>Altura:</strong> <p class="modal-cliente-altura" style="font-size: 1rem;"></p></div>
+            <div class="col-6">
+                <small class="text-muted">Peso</small>
+                <p class="modal-cliente-peso fw-bold"></p>
+            </div>
+            <div class="col-6">
+                <small class="text-muted">Altura</small>
+                <p class="modal-cliente-altura fw-bold"></p>
+            </div>
         </div>
 
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-fechar" data-bs-dismiss="modal">Fechar</button>
-        
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Fechar</button>
         <form id="formCancelarConsulta" method="POST" action="">
             {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger btn-cancelar-consulta">Cancelar Consulta</button>
+            <button type="submit" class="btn btn-outline-danger btn-cancelar-consulta rounded-pill px-4">Cancelar Consulta</button>
         </form>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
 
+{% endblock %}
 
 {% block extrascripts %}
 <script>
@@ -261,30 +362,33 @@ $(document).ready(function() {
     
     consultaModal.addEventListener('show.bs.modal', function (event) {
         var triggerElement = $(event.relatedTarget);
-        var clienteNome = triggerElement.data('cliente-nome');
-        var dataHora = triggerElement.data('data-hora');
-        var modalidade = triggerElement.data('modalidade');
-        var status = triggerElement.data('status');
-        var statusClass = triggerElement.data('status-class').toLowerCase();
-        var preco = triggerElement.data('preco');
-        var cancelarUrl = triggerElement.data('cancelar-url');
-        var peso = triggerElement.data('peso');
-        var altura = triggerElement.data('altura');
-        var objetivos = triggerElement.data('objetivos');
         var modal = $(this);
-        var badgeStatus = modal.find('.modal-status');
-        var btnCancelar = modal.find('#formCancelarConsulta');
-        modal.find('.modal-cliente-nome').text(clienteNome);
-        modal.find('.modal-data-hora').text(dataHora);
-        modal.find('.modal-modalidade').text(modalidade);
+        var btnCancelar = modal.find('#formCancelarConsulta button');
+        
+        modal.find('.modal-cliente-nome').text(triggerElement.data('cliente-nome'));
+        modal.find('.modal-data-hora').text(triggerElement.data('data-hora'));
+        
+        var modalidade = triggerElement.data('modalidade');
+        
+        var status = triggerElement.data('status');
         modal.find('.modal-status').text(status);
-        modal.find('.modal-preco').text(preco);
-        modal.find('.modal-cliente-peso').text(peso + ' kg');
-        modal.find('.modal-cliente-altura').text(altura + ' m');
-        modal.find('.modal-cliente-objetivos').text(objetivos);
-        btnCancelar.attr('action', cancelarUrl);
-        badgeStatus.removeClass('tag-confirmado tag-concluido tag-cancelado').addClass('tag-' + statusClass);
-        if (statusClass === 'concluido' || statusClass === 'cancelado') {
+        
+        var statusClass = triggerElement.data('status-class');
+        var badge = modal.find('.modal-status');
+        badge.removeClass('bg-success bg-secondary bg-danger bg-warning text-dark');
+        
+        if (statusClass === 'CONFIRMADO') badge.addClass('bg-success');
+        else if (statusClass === 'CONCLUIDO') badge.addClass('bg-secondary');
+        else if (statusClass === 'CANCELADO') badge.addClass('bg-danger');
+        
+        modal.find('.modal-preco').text(triggerElement.data('preco'));
+        modal.find('.modal-cliente-peso').text(triggerElement.data('peso') + ' kg');
+        modal.find('.modal-cliente-altura').text(triggerElement.data('altura') + ' m');
+        modal.find('.modal-cliente-objetivos').text(triggerElement.data('objetivos'));
+        
+        modal.find('#formCancelarConsulta').attr('action', triggerElement.data('cancelar-url'));
+        
+        if (statusClass === 'CONCLUIDO' || statusClass === 'CANCELADO') {
             btnCancelar.hide();
         } else {
             btnCancelar.show();

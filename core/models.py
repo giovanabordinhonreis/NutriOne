@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from datetime import timedelta # <-- ADICIONEI ESTA LINHA
+from datetime import timedelta 
 
 def user_directory_path(instance, filename):
     return f'user_{instance.usuario.id}/profile_pics/{filename}'
@@ -60,6 +60,7 @@ class Consulta(models.Model):
     data_horario = models.DateTimeField()
     modalidade = models.CharField(max_length=20, choices=ModalidadeChoices.choices)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.CONFIRMADO)
+    duracao = models.IntegerField(default=60, help_text="Duração em minutos desta consulta")
     
     
     class Meta:
@@ -71,13 +72,8 @@ class Consulta(models.Model):
         return f"Consulta de {self.cliente} com {self.nutricionista} em {self.data_horario.strftime('%d/%m/%Y %H:%M')}"
 
     def get_end_time(self):
-        """
-        Calcula a hora de término da consulta com base na duração
-        definida no perfil do nutricionista.
-        """
-        if self.data_horario and self.nutricionista.duracao_consulta:
-            return self.data_horario + timedelta(minutes=self.nutricionista.duracao_consulta)
-        return self.data_horario
+        duracao_real = self.duracao if self.duracao else self.nutricionista.duracao_consulta
+        return self.data_horario + timedelta(minutes=duracao_real)
 
 class PlanoAlimentar(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)

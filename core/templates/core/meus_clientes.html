@@ -7,7 +7,6 @@
 
 {% block extrastyles %}
 <style>
-    /* ... Mantenha todo o seu CSS igualzinho estava ... */
     .card-custom {
         border-radius: 24px;
         border: none;
@@ -45,7 +44,6 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
     
-    /* Estilos do Modal */
     .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
     .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
     .modal-body label { font-weight: 500; margin-bottom: 0.3rem; font-size: 0.9rem; }
@@ -132,12 +130,24 @@
                         <span class="text-muted small">Telefone: {{ cliente.usuario.telefone }}</span>
                     </div>
                     
-                    <a href="{% url 'api_cliente_detalhes' cliente.id %}" 
-                       class="btn btn-detalhes btn-ver-detalhes-ajax" 
-                       data-bs-toggle="modal" 
-                       data-bs-target="#clienteDetalhesModal">
-                        Ver detalhes
-                    </a>
+                    <div class="d-flex gap-2 mt-3 mt-md-0">
+    <a href="{% url 'api_cliente_detalhes' cliente.id %}" 
+       class="btn btn-detalhes btn-ver-detalhes-ajax" 
+       data-bs-toggle="modal" 
+       data-bs-target="#clienteDetalhesModal">
+       <i class="bi bi-eye-fill"></i> Detalhes
+    </a>
+
+    {% if cliente.tem_plano %}
+        <a href="{% url 'criar_plano_alimentar' cliente.id %}" class="btn btn-outline-primary" style="border-radius: 24px;">
+            <i class="bi bi-journal-text"></i> Ver Plano
+        </a>
+    {% else %}
+        <a href="{% url 'criar_plano_alimentar' cliente.id %}" class="btn btn-outline-success" style="border-radius: 24px;">
+            <i class="bi bi-plus-circle"></i> Adicionar Plano
+        </a>
+    {% endif %}
+</div>
                 </div>
             </div>
         </div>
@@ -209,12 +219,11 @@ $(document).ready(function() {
     var clienteModal = document.getElementById('clienteDetalhesModal');
     
     clienteModal.addEventListener('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Botão que acionou o modal
-        var apiUrl = button.attr('href'); // Pega a URL da API do href do botão
+        var button = $(event.relatedTarget);
+        var apiUrl = button.attr('href');
 
         var modal = $(this);
         
-        // Limpa o modal enquanto carrega
         modal.find('#modal-cliente-nome').text('Carregando...');
         modal.find('#modal-cliente-objetivos').text('-');
         modal.find('#modal-cliente-peso').text('-');
@@ -223,12 +232,10 @@ $(document).ready(function() {
         modal.find('#modal-cliente-foto').attr('src', '{% static "core/images/placeholder_cliente.png" %}');
         modal.find('#modal-consulta-lista').html('<p class="text-muted small">Carregando...</p>');
 
-        // Faz a chamada AJAX para buscar os dados
         $.ajax({
             url: apiUrl,
             type: 'GET',
             success: function(data) {
-                // Preenche o modal com os dados do cliente
                 modal.find('#modal-cliente-nome').text(data.nome);
                 modal.find('#modal-cliente-objetivos').text(data.objetivos);
                 modal.find('#modal-cliente-peso').text(data.peso);
@@ -236,7 +243,6 @@ $(document).ready(function() {
                 modal.find('#modal-cliente-idade').text(data.idade); 
                 modal.find('#modal-cliente-foto').attr('src', data.foto_url);
                 
-                // Preenche a lista de consultas
                 var consultaListaHtml = '';
                 if (data.consultas && data.consultas.length > 0) {
                     data.consultas.forEach(function(consulta) {

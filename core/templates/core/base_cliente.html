@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NutriAgenda{% endblock %}</title>
-   
+    <link rel="shortcut icon" type="image/png" href="{% static 'core/images/logo2.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Nunito:wght@400;700&am…" rel="stylesheet">
- 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -21,7 +21,7 @@
             display: flex;
             min-height: 100vh;
         }
- 
+
         .sidebar {
             width: 88px;
             background-color: #8A9A5B;
@@ -39,14 +39,13 @@
             width: 260px;
             padding: 20px;
         }
- 
+
         .sidebar-logo-placeholder {
             height: 50px;
             margin-bottom: 2rem;
             flex-shrink: 0;
         }
- 
- 
+
         .sidebar-nav {
             list-style: none;
             padding: 0;
@@ -58,7 +57,7 @@
             margin-bottom: 0.5rem;
             overflow: hidden;
         }
-       
+        
         .nav-link {
             display: flex;
             align-items: center;
@@ -70,14 +69,14 @@
             border-radius: 24px;
             color: white;
         }
-       
+        
         .nav-link i {
             font-size: 1.3rem;
             margin-right: 15px;
             min-width: 34px;
             text-align: center;
         }
-       
+        
         .nav-link span {
             opacity: 0;
             transition: opacity 0.2s ease;
@@ -85,7 +84,7 @@
         .sidebar:hover .nav-link span {
             opacity: 1;
         }
- 
+
         .nav-link:hover {
             background-color: #7A8A4C;
         }
@@ -94,12 +93,11 @@
             color: #7A8A4C;
             font-weight: 600;
         }
- 
+
         .nav-link.active i {
              color: #7A8A4C;
         }
- 
- 
+
         .sidebar-profile {
             margin-top: auto;
             display: flex;
@@ -115,7 +113,7 @@
             justify-content: flex-start;
             padding: 10px;
         }
- 
+
         .profile-pic {
             width: 40px;
             height: 40px;
@@ -130,18 +128,18 @@
             flex-shrink: 0;
             overflow: hidden;
         }
- 
+
         #sidebarProfilePic {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
         }
-       
+        
         .sidebar:hover .profile-pic {
             margin-right: 10px;
         }
- 
+
         .profile-info {
             line-height: 1.2;
             opacity: 0;
@@ -162,7 +160,7 @@
             font-size: 0.8rem;
             opacity: 0.8;
         }
- 
+
         .logout-icon {
             color: white;
             opacity: 0.7;
@@ -179,7 +177,7 @@
         .logout-icon:hover {
             opacity: 1;
         }
-       
+        
         .main-content {
             margin-left: 88px;
             width: calc(100% - 88px);
@@ -188,9 +186,9 @@
         }
         .sidebar:hover ~ .main-content {
             margin-left: 260px;
+            width: calc(100% - 260px);
         }
-       
- 
+        
         .modal-header { background-color: #8A9A5B; color: white; border-bottom: none; }
         .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
         .modal-body label { font-weight: 500; margin-bottom: 0.3rem; font-size: 0.9rem; }
@@ -199,18 +197,18 @@
         .btn-salvar-perfil:hover { background-color: #5f6f3a; }
         .btn-cancelar-perfil { border-radius: 24px; padding: 10px 20px; }
         #imagePreviewContainer { margin-top: 1rem; text-align: center; }
-        #imagePreview { max-width: 150px; max-height: 150px; border-radius: 50%; margin-top: 0.5rem; object-fit: cover; border: 2px solid #eee; }
+        #imagePreview { width: 150px; height: 150px; border-radius: 50%; margin-top: 0.5rem; object-fit: cover; border: 2px solid #eee; }
         .form-control, .form-select { border-radius: 24px; }
- 
+
     </style>
     {% block extrastyles %}{% endblock %}
 </head>
 <body>
     <div class="main-wrapper">
         <nav class="sidebar">
-           
+            
             <div class="sidebar-logo-placeholder"></div>
-           
+            
             <ul class="sidebar-nav">
                 <li class="nav-item">
                     <a href="{% url 'dashboard_cliente' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_cliente' %}active{% endif %}">
@@ -232,14 +230,14 @@
                         <i class="bi bi-search"></i> <span>Encontrar Nutricionista</span>
                     </a>
                 </li>
-               
+                
                 <li class="nav-item">
                     <a href="{% url 'perfil_cliente' %}" id="editProfileLink" class="nav-link {% if request.resolver_match.url_name == 'perfil_cliente' %}active{% endif %}">
                         <i class="bi bi-person-fill"></i> <span>Meu Perfil</span>
                     </a>
                 </li>
             </ul>
- 
+
             <div class="sidebar-profile">
                 <div class="profile-pic">
                    {% if request.user.perfil_cliente.foto_perfil %}
@@ -258,13 +256,13 @@
                 </a>
             </div>
         </nav>
- 
+
         <main class="main-content">
             {% block content %}
             {% endblock %}
         </main>
     </div>
- 
+
     <div class="modal fade" id="profileEditModal" tabindex="-1" aria-labelledby="profileEditModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 24px;">
@@ -297,13 +295,11 @@
                         <label for="id_idade_modal" class="form-label">Idade</label>
                         <input type="number" name="idade" class="form-control" id="id_idade_modal">
                     </div>
-                   <div class="col-md-6 mb-3">
-                        <label for="id_objetivos_modal" class="form-label">Objetivos</label>
-                        <select name="objetivos" class="form-select" id="id_objetivos_modal">
-                            {% for value, text in form_update.objetivos.field.choices %}
-                                <option value="{{ value }}">{{ text }}</option>
-                            {% endfor %}
-                        </select>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Objetivos</label>
+                        <div id="container_objetivos" class="border rounded p-3 bg-white" style="max-height: 150px; overflow-y: auto;">
+                            <small class="text-muted">Carregando...</small>
+                        </div>
                     </div>
                 </div>
                  <div id="profileFormFeedback" class="mt-3"></div>
@@ -316,11 +312,9 @@
         </div>
       </div>
     </div>
- 
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    {# Chart.js não é mais necessário aqui se você removeu o gráfico #}
-    {# <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> #}
    
     <script>
         $(document).ready(function() {
@@ -336,13 +330,13 @@
                     const imageInput = $('#id_foto_perfil_modal');
                     const sidebarPic = $('#sidebarProfilePic');
                     const sidebarInitial = $('#sidebarProfileInitial');
- 
-                   
+
+                    
                     $('#editProfileLink').on('click', function(e) {
                         e.preventDefault();
                         feedbackDiv.html('');
                         imagePreview.hide().attr('src', '#');
-                       
+                        
                         $.ajax({
                             url: $(this).attr('href'),
                             type: 'GET',
@@ -351,7 +345,28 @@
                                 $('#id_peso_modal').val(data.peso);
                                 $('#id_altura_modal').val(data.altura);
                                 $('#id_idade_modal').val(data.idade);
-                                $('#id_objetivos_modal').val(data.objetivos);
+                                
+                                const containerObj = $('#container_objetivos');
+                                containerObj.empty();
+
+                                if (data.opcoes_objetivos) {
+                                    data.opcoes_objetivos.forEach(function(opcao) {
+                                        const isChecked = (data.objetivos_selecionados && data.objetivos_selecionados.includes(opcao.value)) ? 'checked' : '';
+                                        
+                                        const htmlCheckbox = `
+                                            <div class="form-check mb-1">
+                                                <input class="form-check-input" type="checkbox" name="objetivos" value="${opcao.value}" id="obj_${opcao.value}" ${isChecked}>
+                                                <label class="form-check-label" for="obj_${opcao.value}">
+                                                    ${opcao.label}
+                                                </label>
+                                            </div>
+                                        `;
+                                        containerObj.append(htmlCheckbox);
+                                    });
+                                } else {
+                                    containerObj.html('<small class="text-danger">Erro ao carregar opções.</small>');
+                                }
+
                                 if (data.foto_url) { imagePreview.attr('src', data.foto_url).show(); }
                                 else { imagePreview.hide(); }
                                 imageInput.val('');
@@ -370,12 +385,12 @@
                         reader.onload = function(e) { imagePreview.attr('src', e.target.result).show(); }
                         if (event.target.files.length > 0) { reader.readAsDataURL(event.target.files[0]); }
                     });
-                     
-                   
+                      
+                    
                     $('#saveProfileButton').on('click', function() {
                         feedbackDiv.html('');
                         const formData = new FormData(profileForm[0]);
-                       
+                        
                         $.ajax({
                             url: "{% url 'perfil_cliente' %}",
                             type: 'POST', data: formData,
@@ -399,11 +414,7 @@
                             }
                         });
                     });
-                } else {
-                    console.error("Elemento do modal #profileEditModal não encontrado.");
                 }
-            } else {
-                 console.error("Bootstrap não está carregado.");
             }
         });
     </script>

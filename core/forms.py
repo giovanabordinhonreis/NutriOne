@@ -1,9 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.forms import inlineformset_factory
 from .models import User, Nutricionista, Especialidade, Cliente, Consulta, PlanoAlimentar, Refeicao
 import json
-
-
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -17,7 +16,6 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['email'].widget.attrs.update({'placeholder': 'E-mail'})
         self.fields['telefone'].widget.attrs.update({'placeholder': 'Telefone'})
         
-
         if 'password1' in self.fields:
             self.fields['password1'].help_text = None
         if 'password2' in self.fields:
@@ -43,7 +41,6 @@ class CustomAuthenticationForm(AuthenticationForm):
         self.fields['password'].label = ""
 
 
-
 class ClienteProfileForm(forms.ModelForm):
     OBJETIVO_CHOICES = [
         ('EMAGRECIMENTO', 'Emagrecimento'),
@@ -54,13 +51,11 @@ class ClienteProfileForm(forms.ModelForm):
         ('OUTRO', 'Outro'),
     ]
 
-
     objetivos = forms.MultipleChoiceField(
         choices=OBJETIVO_CHOICES,
         label="Objetivos",
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
     )
-    
 
     foto_perfil = forms.ImageField(
         label="Foto de Perfil (Opcional)",
@@ -83,7 +78,6 @@ class ClienteProfileForm(forms.ModelForm):
         }
     
     def clean_objetivos(self):
-
         objetivos_lista = self.cleaned_data.get('objetivos')
         if objetivos_lista:
             return ", ".join(objetivos_lista)
@@ -101,7 +95,8 @@ class ClienteProfileUpdateForm(forms.ModelForm):
     foto_perfil = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
     
     class Meta:
-        model = Cliente; fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos'] 
+        model = Cliente
+        fields = ['foto_perfil', 'peso', 'altura', 'idade', 'objetivos'] 
         labels = { 'foto_perfil': 'Foto de Perfil', 'peso': 'Peso (kg)', 'altura': 'Altura (m)', 'idade': 'Idade', }
         widgets = { 'peso': forms.NumberInput(attrs={'class': 'form-control'}), 'altura': forms.NumberInput(attrs={'class': 'form-control'}), 'idade': forms.NumberInput(attrs={'class': 'form-control'}), }
 
@@ -110,6 +105,7 @@ class ClienteProfileUpdateForm(forms.ModelForm):
         if objetivos_lista:
             return ", ".join(objetivos_lista)
         return ""
+
 
 class ConsultaForm(forms.ModelForm):
     modalidade = forms.ChoiceField(
@@ -125,7 +121,6 @@ class ConsultaForm(forms.ModelForm):
     class Meta:
         model = Consulta
         fields = ['modalidade'] 
-
 
 
 class NutricionistaProfileForm(forms.ModelForm):
@@ -179,21 +174,51 @@ class PlanoAlimentarForm(forms.ModelForm):
     class Meta:
         model = PlanoAlimentar
         fields = ['observacoes']
-        widgets = { 'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Ex: Evitar glúten, beber 2L de água por dia...'}), }
-        labels = { 'observacoes': 'Observações Gerais do Plano', }
+        widgets = {
+            'observacoes': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Ex: Beber 2L de água por dia. Evitar doces em excesso...'
+            }),
+        }
+        labels = {
+            'observacoes': 'Observações Gerais do Plano',
+        }
 
 class RefeicaoForm(forms.ModelForm):
     class Meta:
         model = Refeicao
         fields = ['nome', 'alimentos', 'quantidades', 'calorias']
         widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: Café da Manhã'}),
-            'alimentos': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 2, 'placeholder': 'Ex: 1x Banana, 20g Aveia'}),
-            'quantidades': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 1 unidade, 2 colheres'}),
-            'calorias': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: 350'}),
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ex: Café da Manhã'
+            }),
+            'alimentos': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 2, 
+                'placeholder': 'Ex: Pão integral, Ovos mexidos, Café sem açúcar...'
+            }),
+            'quantidades': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ex: 2 fatias, 2 unidades, 1 xícara'
+            }),
+            'calorias': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Opcional (Ex: 350)'
+            }),
         }
-        labels = { 'nome': 'Nome da Refeição', 'alimentos': 'Alimentos', 'quantidades': 'Quantidades', 'calorias': 'Calorias (kcal)', }
+        labels = {
+            'nome': 'Refeição (Ex: Almoço)',
+            'alimentos': 'O que comer?',
+            'quantidades': 'Quantidades',
+            'calorias': 'Calorias (kcal)',
+        }
 
-RefeicaoFormSet = forms.inlineformset_factory(
-    PlanoAlimentar, Refeicao, form=RefeicaoForm, extra=6, min_num=1, can_delete=True
+RefeicaoFormSet = inlineformset_factory(
+    PlanoAlimentar, 
+    Refeicao, 
+    form=RefeicaoForm, 
+    extra=4, 
+    can_delete=True
 )
