@@ -28,7 +28,6 @@ def normalizar_nome_refeicao(nome):
     return nome_sem_acentos.lower().replace(" ", "_").replace("-", "_")
 
 
-# --- FUNÇÃO AUXILIAR: ATUALIZA STATUS AUTOMATICAMENTE ---
 def atualizar_status_automatico(nutricionista):
     """
     Verifica todas as consultas desse nutricionista.
@@ -44,7 +43,6 @@ def atualizar_status_automatico(nutricionista):
         consultas_vencidas.update(status=Consulta.StatusChoices.CONCLUIDO)
 
 
-# --- AUTENTICAÇÃO ---
 def login_usuario(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -83,7 +81,6 @@ def selecionar_conta(request):
     return render(request, 'core/selecionar_conta.html')
 
 
-# --- NUTRICIONISTA ---
 @login_required
 def cadastro_nutricionista(request):
     if request.method == 'POST':
@@ -118,11 +115,9 @@ def cadastro_nutricionista(request):
 
 @login_required
 def dashboard_nutricionista_today(request):
-    # Pega a data de hoje no fuso horário correto
     today_str = timezone.localtime(timezone.now()).strftime('%Y-%m-%d')
     return redirect('dashboard_nutri_date', date_str=today_str)
 
-# --- VIEW PRINCIPAL: DASHBOARD COM VISÃO SEMANAL ---
 @login_required
 def dashboard_nutricionista(request, date_str):
     try:
@@ -130,52 +125,42 @@ def dashboard_nutricionista(request, date_str):
     except Nutricionista.DoesNotExist:
         return redirect('cadastro_nutricionista')
 
-    # Atualiza status de consultas passadas para "Concluído"
     atualizar_status_automatico(nutri_profile)
 
     try:
-        # Tenta converter a data da URL
         selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        # Se der erro, usa a data de hoje
         selected_date = timezone.localtime(timezone.now()).date()
         return redirect('dashboard_nutri_date', date_str=selected_date.strftime('%Y-%m-%d'))
 
     today = timezone.localtime(timezone.now()).date()
 
-    # --- LÓGICA DA RÉGUA SEMANAL (Começa na Segunda-feira) ---
-    # weekday(): 0 = Segunda, 6 = Domingo. Subtraímos para achar a segunda-feira da semana atual.
     start_of_week = selected_date - timedelta(days=selected_date.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
-    # Links para navegar entre semanas
     prev_week_url = (start_of_week - timedelta(days=7)).strftime('%Y-%m-%d')
     next_week_url = (start_of_week + timedelta(days=7)).strftime('%Y-%m-%d')
 
-    # Busca consultas SOMENTE desta semana para verificar os "pontinhos" (dias ocupados)
     consultas_semana = Consulta.objects.filter(
         nutricionista=nutri_profile,
         data_horario__date__range=[start_of_week, end_of_week]
     )
 
-    # Monta a lista de dias para o HTML desenhar a régua
     agenda_semanal = []
     for i in range(7):
         dia_iteracao = start_of_week + timedelta(days=i)
         
-        # Verifica se existe alguma consulta neste dia específico
         tem_consultas = consultas_semana.filter(data_horario__date=dia_iteracao).exists()
         
         agenda_semanal.append({
             'data': dia_iteracao,
             'dia_numero': dia_iteracao.day,
-            'is_selected': dia_iteracao == selected_date, # Marca o dia selecionado
-            'is_today': dia_iteracao == today,            # Marca se é hoje
-            'tem_consultas': tem_consultas,               # Define se mostra a bolinha
-            'url': dia_iteracao.strftime('%Y-%m-%d')      # Link para clicar no dia
+            'is_selected': dia_iteracao == selected_date,
+            'is_today': dia_iteracao == today,           
+            'tem_consultas': tem_consultas,               
+            'url': dia_iteracao.strftime('%Y-%m-%d')      
         })
 
-    # --- LÓGICA DA TABELA (Consultas do dia selecionado) ---
     appointments = Consulta.objects.filter(
         nutricionista=nutri_profile,
         data_horario__date=selected_date 
@@ -393,7 +378,6 @@ def criar_plano_alimentar(request, cliente_id):
     return render(request, 'core/criar_plano_alimentar.html', context)
 
 
-# --- CLIENTE ---
 @login_required
 def cadastro_cliente_perfil(request):
     if request.method == 'POST':
@@ -490,7 +474,6 @@ def agendar_consulta(request, nutri_id):
                 consulta.nutricionista = nutricionista
                 consulta.data_horario = form.cleaned_data['data_horario_selecionado']
                 
-                # --- A CORREÇÃO ESTÁ AQUI ---
                 consulta.duracao = nutricionista.duracao_consulta
                 
                 consulta.status = Consulta.StatusChoices.CONFIRMADO
@@ -542,7 +525,6 @@ def api_horarios_disponiveis(request):
             status=Consulta.StatusChoices.CONFIRMADO
         )
         
-        # --- A CORREÇÃO ESTÁ AQUI: Cálculo de intervalos ---
         intervalos_ocupados = []
         tz = timezone.get_default_timezone()
         
@@ -551,7 +533,6 @@ def api_horarios_disponiveis(request):
             if timezone.is_naive(inicio_ocupado):
                 inicio_ocupado = timezone.make_aware(inicio_ocupado, tz)
             
-            # Pega duração salva ou usa a padrão
             duracao_real = getattr(consulta, 'duracao', None)
             if not duracao_real: 
                 duracao_real = nutri.duracao_consulta
@@ -572,7 +553,6 @@ def api_horarios_disponiveis(request):
             if slot_finish > end_dt:
                 break
 
-            # Verifica sobreposição de intervalos
             is_ocupado = False
             for (occ_start, occ_end) in intervalos_ocupados:
                 if current_slot < occ_end and slot_finish > occ_start:
